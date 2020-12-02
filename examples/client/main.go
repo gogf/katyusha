@@ -1,10 +1,10 @@
 package main
 
 import (
-	etcd3 "github.com/coreos/etcd/clientv3"
 	"github.com/gogf/katyusha/balancer"
-	"github.com/gogf/katyusha/example/proto"
+	"github.com/gogf/katyusha/examples/proto"
 	"github.com/gogf/katyusha/registry"
+	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"log"

@@ -1,14 +1,14 @@
 package registry
 
 import (
-	etcd_cli "github.com/coreos/etcd/clientv3"
+	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/resolver"
 	"sync"
 )
 
 type etcdResolver struct {
 	scheme        string
-	etcdConfig    etcd_cli.Config
+	etcdConfig    etcd3.Config
 	etcdWatchPath string
 	watcher       *Watcher
 	cc            resolver.ClientConn
@@ -16,7 +16,7 @@ type etcdResolver struct {
 }
 
 func (r *etcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	etcdCli, err := etcd_cli.New(r.etcdConfig)
+	etcdCli, err := etcd3.New(r.etcdConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (r *etcdResolver) Close() {
 	r.wg.Wait()
 }
 
-func RegisterResolver(scheme string, etcdConfig etcd_cli.Config, registryDir, srvName, srvVersion string) {
+func RegisterResolver(scheme string, etcdConfig etcd3.Config, registryDir, srvName, srvVersion string) {
 	resolver.Register(&etcdResolver{
 		scheme:        scheme,
 		etcdConfig:    etcdConfig,

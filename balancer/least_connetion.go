@@ -10,18 +10,18 @@ import (
 	"time"
 )
 
-const LeastConnection = "least_connection_x"
+type leastConnectionPickerBuilder struct{}
 
-// newLeastConnectionBuilder creates a new leastConnection balancer builder.
-func newLeastConnectionBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(LeastConnection, &leastConnectionPickerBuilder{}, base.Config{HealthCheck: true})
-}
+const LeastConnection = "least_connection_x"
 
 func init() {
 	balancer.Register(newLeastConnectionBuilder())
 }
 
-type leastConnectionPickerBuilder struct{}
+// newLeastConnectionBuilder creates a new leastConnection balancer builder.
+func newLeastConnectionBuilder() balancer.Builder {
+	return base.NewBalancerBuilderV2(LeastConnection, &leastConnectionPickerBuilder{}, base.Config{HealthCheck: true})
+}
 
 func (*leastConnectionPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Picker {
 	grpclog.Infof("leastConnectionPicker: newPicker called with buildInfo: %v", buildInfo)

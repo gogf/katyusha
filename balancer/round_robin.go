@@ -8,18 +8,24 @@ import (
 	"sync"
 )
 
-const RoundRobin = "round_robin_x"
+type roundRobinPickerBuilder struct{}
 
-// newRoundRobinBuilder creates a new roundrobin balancer builder.
-func newRoundRobinBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(RoundRobin, &roundRobinPickerBuilder{}, base.Config{HealthCheck: true})
+type roundRobinPicker struct {
+	subConns []balancer.SubConn
+	mu       sync.Mutex
+	next     int
 }
+
+const RoundRobin = "round_robin_x"
 
 func init() {
 	balancer.Register(newRoundRobinBuilder())
 }
 
-type roundRobinPickerBuilder struct{}
+// newRoundRobinBuilder creates a new roundrobin balancer builder.
+func newRoundRobinBuilder() balancer.Builder {
+	return base.NewBalancerBuilderV2(RoundRobin, &roundRobinPickerBuilder{}, base.Config{HealthCheck: true})
+}
 
 func (*roundRobinPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Picker {
 	grpclog.Infof("roundrobinPicker: newPicker called with buildInfo: %v", buildInfo)
@@ -39,12 +45,6 @@ func (*roundRobinPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V
 		subConns: scs,
 		next:     rand.Intn(len(scs)),
 	}
-}
-
-type roundRobinPicker struct {
-	subConns []balancer.SubConn
-	mu       sync.Mutex
-	next     int
 }
 
 func (p *roundRobinPicker) Pick(balancer.PickInfo) (balancer.PickResult, error) {

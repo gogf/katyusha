@@ -2,8 +2,8 @@ package registry
 
 import (
 	"encoding/json"
-	etcd3 "github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/mvcc/mvccpb"
+	"go.etcd.io/etcd/api/v3/mvccpb"
+	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
@@ -69,7 +69,7 @@ func (w *Watcher) Watch() chan []resolver.Address {
 			for _, ev := range wresp.Events {
 				switch ev.Type {
 				case mvccpb.PUT:
-					nodeData := ServiceInfo{}
+					nodeData := Service{}
 					err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
 					if err != nil {
 						grpclog.Error("Parse node data error:", err)
@@ -80,7 +80,7 @@ func (w *Watcher) Watch() chan []resolver.Address {
 						out <- w.cloneAddresses(w.addrs)
 					}
 				case mvccpb.DELETE:
-					nodeData := ServiceInfo{}
+					nodeData := Service{}
 					err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
 					if err != nil {
 						grpclog.Error("Parse node data error:", err)
@@ -97,8 +97,8 @@ func (w *Watcher) Watch() chan []resolver.Address {
 	return out
 }
 
-func extractAddrs(resp *etcd3.GetResponse) []ServiceInfo {
-	addrs := []ServiceInfo{}
+func extractAddrs(resp *etcd3.GetResponse) []Service {
+	addrs := []Service{}
 
 	if resp == nil || resp.Kvs == nil {
 		return addrs
@@ -106,7 +106,7 @@ func extractAddrs(resp *etcd3.GetResponse) []ServiceInfo {
 
 	for i := range resp.Kvs {
 		if v := resp.Kvs[i].Value; v != nil {
-			nodeData := ServiceInfo{}
+			nodeData := Service{}
 			err := json.Unmarshal(v, &nodeData)
 			if err != nil {
 				grpclog.Info("Parse node data error:", err)

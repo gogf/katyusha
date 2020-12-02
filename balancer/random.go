@@ -9,18 +9,24 @@ import (
 	"time"
 )
 
-const Random = "random_x"
+type randomPickerBuilder struct{}
 
-// newRandomBuilder creates a new random balancer builder.
-func newRandomBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(Random, &randomPickerBuilder{}, base.Config{HealthCheck: true})
+type randomPicker struct {
+	subConns []balancer.SubConn
+	mu       sync.Mutex
+	rand     *rand.Rand
 }
+
+const Random = "random_x"
 
 func init() {
 	balancer.Register(newRandomBuilder())
 }
 
-type randomPickerBuilder struct{}
+// newRandomBuilder creates a new random balancer builder.
+func newRandomBuilder() balancer.Builder {
+	return base.NewBalancerBuilderV2(Random, &randomPickerBuilder{}, base.Config{HealthCheck: true})
+}
 
 func (*randomPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Picker {
 	grpclog.Infof("randomPicker: newPicker called with buildInfo: %v", buildInfo)
@@ -39,12 +45,6 @@ func (*randomPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Pic
 		subConns: scs,
 		rand:     rand.New(rand.NewSource(time.Now().Unix())),
 	}
-}
-
-type randomPicker struct {
-	subConns []balancer.SubConn
-	mu       sync.Mutex
-	rand     *rand.Rand
 }
 
 func (p *randomPicker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
