@@ -10,9 +10,6 @@ import (
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"log"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -42,10 +39,10 @@ func StartService() {
 	}
 
 	register, err := registry.NewRegister(
-		&registry.Config{
+		&registry.EtcdConfig{
 			EtcdConfig:  etcdConfig,
 			RegistryDir: "/backend/services",
-			Ttl:         10 * time.Second,
+			TTL:         10 * time.Second,
 		})
 	if err != nil {
 		log.Panic(err)
@@ -56,14 +53,16 @@ func StartService() {
 	})
 	proto.RegisterTestServer(s.Server, new(helloServer))
 	s.Start()
-	register.Register(service)
+	if err := register.Register(service); err != nil {
+		panic(err)
+	}
 	s.Wait()
 
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChan
-	register.Unregister(service)
-	s.Stop()
+	//signalChan := make(chan os.Signal, 1)
+	//signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+	//<-signalChan
+	//register.Unregister(service)
+	//s.Stop()
 
 }
 

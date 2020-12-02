@@ -2,6 +2,7 @@ package registry
 
 import (
 	"github.com/gogf/gf/frame/g"
+	etcd3 "go.etcd.io/etcd/client/v3"
 )
 
 // Service definition.
@@ -13,11 +14,12 @@ type Service struct {
 	Environment string // Service deployment environment, eg: dev, qa, staging, prod, etc.
 	Group       string // Service group, to indicate different service in the same environment with the same Name and AppId.
 	Metadata    g.Map  // Custom data that will be passed from service to service.
+	etcdGrantId etcd3.LeaseID
 }
 
 // Register for service.
 type Register interface {
 	Register(service *Service) error
 	Unregister(service *Service) error
-	Close()
+	Close() error
 }

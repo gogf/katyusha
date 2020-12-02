@@ -39,7 +39,7 @@ func (s *GrpcServer) Run() error {
 	if err != nil {
 		return err
 	}
-	g.Log().Printf("grpc start listening on: %s", s.config.Addr)
+	g.Log().Printf("grpc server start listening on: %s", s.config.Addr)
 	return s.Server.Serve(listener)
 }
 
@@ -54,11 +54,7 @@ func (s *GrpcServer) Start() {
 
 // Wait works with Start, which blocks current goroutine until the server stops.
 func (s *GrpcServer) Wait() {
-	s.waitGroup.Add(1)
-	go func() {
-		defer s.waitGroup.Done()
-		s.Run()
-	}()
+	s.waitGroup.Wait()
 }
 
 // Stop gracefully stops the server.
