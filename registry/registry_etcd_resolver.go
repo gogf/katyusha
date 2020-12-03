@@ -6,49 +6,46 @@ import (
 	"sync"
 )
 
-type etcdResolver struct {
-	scheme        string
-	etcdConfig    etcd3.Config
-	etcdWatchPath string
-	watcher       *Watcher
-	clientConn    resolver.ClientConn
-	waitGroup     sync.WaitGroup
+// EtcdResolver implements interface resolver.Builder.
+type EtcdResolver struct {
+	EtcdScheme  string      // Scheme returns the scheme supported by this resolver.
+	EtcdConfig  *EtcdConfig // ETCD configuration object.
+	Service     *Service    // Service configuration.
+	etcdWatcher *EtcdWatcher
+	clientConn  resolver.ClientConn
+	waitGroup   sync.WaitGroup
 }
 
-func (r *etcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	etcdClient, err := etcd3.New(r.etcdConfig)
+// Build implements interface google.golang.org/grpc/resolver.Builder.
+func (r *EtcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
+	etcdClient, err := etcd3.New(*r.EtcdConfig.EtcdConfig)
 	if err != nil {
 		return nil, err
 	}
 	r.clientConn = cc
-	r.watcher = newWatcher(r.etcdWatchPath, etcdClient)
+	r.etcdWatcher = newEtcdWatcher(r.Service.RegisterKey(r.EtcdConfig.RegistryDir), etcdClient)
 	r.waitGroup.Add(1)
 	go func() {
 		defer r.waitGroup.Done()
-		for addr := range r.watcher.Watch() {
+		for addr := range r.etcdWatcher.Watch() {
 			r.clientConn.UpdateState(resolver.State{Addresses: addr})
 		}
 	}()
 	return r, nil
 }
 
-func (r *etcdResolver) Scheme() string {
-	return r.scheme
+// Scheme implements interface google.golang.org/grpc/resolver.Builder.
+func (r *EtcdResolver) Scheme() string {
+	return r.EtcdScheme
 }
 
-func (r *etcdResolver) ResolveNow(o resolver.ResolveNowOptions) {
+// ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.
+func (r *EtcdResolver) ResolveNow(o resolver.ResolveNowOptions) {
+
 }
 
-func (r *etcdResolver) Close() {
-	r.watcher.Close()
+// Close implements interface google.golang.org/grpc/resolver.Resolver.
+func (r *EtcdResolver) Close() {
+	r.etcdWatcher.Close()
 	r.waitGroup.Wait()
-}
-
-func RegisterResolver(scheme string, etcdConfig etcd3.Config, registryDir, srvName, srvVersion string) {
-	resolver.Register(&etcdResolver{
-		scheme:     scheme,
-		etcdConfig: etcdConfig,
-		//etcdWatchPath: registryDir + "/" + srvName + "/" + srvVersion,
-		etcdWatchPath: registryDir + "/default/default/test/v1.0",
-	})
 }

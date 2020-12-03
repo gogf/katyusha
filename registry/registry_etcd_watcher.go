@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-type Watcher struct {
+type EtcdWatcher struct {
 	key       string
 	client    *etcd3.Client
 	ctx       context.Context
@@ -19,13 +19,13 @@ type Watcher struct {
 	addresses []resolver.Address
 }
 
-func (w *Watcher) Close() {
+func (w *EtcdWatcher) Close() {
 	w.cancel()
 }
 
-func newWatcher(key string, cli *etcd3.Client) *Watcher {
+func newEtcdWatcher(key string, cli *etcd3.Client) *EtcdWatcher {
 	ctx, cancel := context.WithCancel(context.Background())
-	w := &Watcher{
+	w := &EtcdWatcher{
 		key:    key,
 		client: cli,
 		ctx:    ctx,
@@ -34,7 +34,7 @@ func newWatcher(key string, cli *etcd3.Client) *Watcher {
 	return w
 }
 
-func (w *Watcher) GetAllAddresses() []resolver.Address {
+func (w *EtcdWatcher) GetAllAddresses() []resolver.Address {
 	var addresses []resolver.Address
 	resp, err := w.client.Get(w.ctx, w.key, etcd3.WithPrefix())
 	if err == nil {
@@ -52,7 +52,7 @@ func (w *Watcher) GetAllAddresses() []resolver.Address {
 	return addresses
 }
 
-func (w *Watcher) Watch() chan []resolver.Address {
+func (w *EtcdWatcher) Watch() chan []resolver.Address {
 	out := make(chan []resolver.Address, 10)
 	w.wg.Add(1)
 	go func() {
@@ -113,7 +113,7 @@ func extractServices(resp *etcd3.GetResponse) []Service {
 	return services
 }
 
-func (w *Watcher) cloneAddresses(in []resolver.Address) []resolver.Address {
+func (w *EtcdWatcher) cloneAddresses(in []resolver.Address) []resolver.Address {
 	out := make([]resolver.Address, len(in))
 	for i := 0; i < len(in); i++ {
 		out[i] = in[i]
@@ -121,7 +121,7 @@ func (w *Watcher) cloneAddresses(in []resolver.Address) []resolver.Address {
 	return out
 }
 
-func (w *Watcher) addAddr(addr resolver.Address) bool {
+func (w *EtcdWatcher) addAddr(addr resolver.Address) bool {
 	// Filter repeated address.
 	for _, v := range w.addresses {
 		if addr.Addr == v.Addr {
@@ -132,7 +132,7 @@ func (w *Watcher) addAddr(addr resolver.Address) bool {
 	return true
 }
 
-func (w *Watcher) removeAddr(addr resolver.Address) bool {
+func (w *EtcdWatcher) removeAddr(addr resolver.Address) bool {
 	for i, v := range w.addresses {
 		if addr.Addr == v.Addr {
 			w.addresses = append(w.addresses[:i], w.addresses[i+1:]...)
