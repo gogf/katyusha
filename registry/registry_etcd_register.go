@@ -46,7 +46,7 @@ func (r *EtcdRegister) Register(service *Service) error {
 		service.Group = DefaultGroup
 	}
 	var (
-		ctx, _             = context.WithTimeout(context.Background(), time.Second*10)
+		//ctx, _             = context.WithTimeout(context.Background(), time.Second*10)
 		serviceMarshalStr  = string(serviceMarshalBytes)
 		serviceRegisterKey = gstr.Join([]string{
 			r.config.RegistryDir,
@@ -58,17 +58,17 @@ func (r *EtcdRegister) Register(service *Service) error {
 	)
 
 	g.Log().Debugf(`register key: %s`, serviceRegisterKey)
-	resp, err := r.etcd3Client.Grant(ctx, int64(r.config.TTL/time.Second))
+	resp, err := r.etcd3Client.Grant(context.Background(), int64(r.config.TTL/time.Second))
 	if err != nil {
 		return err
 	}
 	g.Log().Debugf(`registered grant id: %d`, resp.ID)
 	service.etcdGrantId = resp.ID
-	if _, err := r.etcd3Client.Put(ctx, serviceRegisterKey, serviceMarshalStr, etcd3.WithLease(service.etcdGrantId)); err != nil {
+	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, serviceMarshalStr, etcd3.WithLease(service.etcdGrantId)); err != nil {
 		return err
 	}
 	g.Log().Debugf(`request keepalive for grant id: %d`, resp.ID)
-	keepAliceCh, err := r.etcd3Client.KeepAlive(ctx, resp.ID)
+	keepAliceCh, err := r.etcd3Client.KeepAlive(context.Background(), resp.ID)
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,8 @@ func (r *EtcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 }
 
 func (r *EtcdRegister) Unregister(service *Service) error {
-	_, err := r.etcd3Client.Revoke(context.Background(), service.etcdGrantId)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
+	_, err := r.etcd3Client.Revoke(ctx, service.etcdGrantId)
 	return err
 }
 

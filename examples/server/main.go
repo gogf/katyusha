@@ -27,7 +27,7 @@ func (s *helloServer) Say(ctx context.Context, req *proto.SayReq) (*proto.SayRes
 
 func StartService() {
 	etcdConfig := etcd3.Config{
-		Endpoints: []string{"http://127.0.0.1:2379"},
+		Endpoints: []string{"127.0.0.1:2379"},
 	}
 
 	service := &registry.Service{
@@ -42,7 +42,7 @@ func StartService() {
 		&registry.EtcdConfig{
 			EtcdConfig:  etcdConfig,
 			RegistryDir: "/backend/services",
-			TTL:         10 * time.Second,
+			TTL:         60 * time.Second,
 		})
 	if err != nil {
 		log.Panic(err)

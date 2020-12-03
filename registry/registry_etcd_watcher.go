@@ -6,18 +6,17 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/resolver"
 	"sync"
 )
 
 type Watcher struct {
-	key    string
-	client *etcd3.Client
-	ctx    context.Context
-	cancel context.CancelFunc
-	wg     sync.WaitGroup
-	addrs  []resolver.Address
+	key       string
+	client    *etcd3.Client
+	ctx       context.Context
+	cancel    context.CancelFunc
+	wg        sync.WaitGroup
+	addresses []resolver.Address
 }
 
 func (w *Watcher) Close() {
@@ -61,33 +60,32 @@ func (w *Watcher) Watch() chan []resolver.Address {
 			close(out)
 			w.wg.Done()
 		}()
-		w.addrs = w.GetAllAddresses()
-		out <- w.cloneAddresses(w.addrs)
+		w.addresses = w.GetAllAddresses()
+		out <- w.cloneAddresses(w.addresses)
 
 		for watchResponse := range w.client.Watch(w.ctx, w.key, etcd3.WithPrefix()) {
 			for _, ev := range watchResponse.Events {
+				g.Log().Debugf("watch event: %d, %s", ev.Type, ev.Kv.String())
 				switch ev.Type {
 				case mvccpb.PUT:
 					nodeData := Service{}
-					err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
-					if err != nil {
-						grpclog.Error("Parse node data error:", err)
+					if err := json.Unmarshal(ev.Kv.Value, &nodeData); err != nil {
+						g.Log().Error(err)
 						continue
 					}
 					addr := resolver.Address{Addr: nodeData.Address, Metadata: &nodeData.Metadata}
 					if w.addAddr(addr) {
-						out <- w.cloneAddresses(w.addrs)
+						out <- w.cloneAddresses(w.addresses)
 					}
 				case mvccpb.DELETE:
 					nodeData := Service{}
-					err := json.Unmarshal([]byte(ev.Kv.Value), &nodeData)
-					if err != nil {
-						grpclog.Error("Parse node data error:", err)
+					if err := json.Unmarshal(ev.Kv.Value, &nodeData); err != nil {
+						g.Log().Error(err)
 						continue
 					}
 					addr := resolver.Address{Addr: nodeData.Address, Metadata: &nodeData.Metadata}
 					if w.removeAddr(addr) {
-						out <- w.cloneAddresses(w.addrs)
+						out <- w.cloneAddresses(w.addresses)
 					}
 				}
 			}
@@ -124,19 +122,20 @@ func (w *Watcher) cloneAddresses(in []resolver.Address) []resolver.Address {
 }
 
 func (w *Watcher) addAddr(addr resolver.Address) bool {
-	for _, v := range w.addrs {
+	// Filter repeated address.
+	for _, v := range w.addresses {
 		if addr.Addr == v.Addr {
 			return false
 		}
 	}
-	w.addrs = append(w.addrs, addr)
+	w.addresses = append(w.addresses, addr)
 	return true
 }
 
 func (w *Watcher) removeAddr(addr resolver.Address) bool {
-	for i, v := range w.addrs {
+	for i, v := range w.addresses {
 		if addr.Addr == v.Addr {
-			w.addrs = append(w.addrs[:i], w.addrs[i+1:]...)
+			w.addresses = append(w.addresses[:i], w.addresses[i+1:]...)
 			return true
 		}
 	}
