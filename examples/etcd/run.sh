@@ -1,7 +1,7 @@
 #!/bin/bash
 
-DockerImageName=etcd-3.3
-DockerImagePath=loads/etcd:3.3
+DockerImageName=etcd-3.4
+DockerImagePath=loads/etcd:3.4
 rm -rf /tmp/etcd-data.tmp && mkdir -p /tmp/etcd-data.tmp && \
   docker rm $(docker ps -a -q) && \
   docker run \
@@ -17,6 +17,4 @@ rm -rf /tmp/etcd-data.tmp && mkdir -p /tmp/etcd-data.tmp && \
   --advertise-client-urls http://0.0.0.0:2379 \
   --listen-peer-urls http://0.0.0.0:2380 \
   --initial-advertise-peer-urls http://0.0.0.0:2380 \
-  --initial-cluster s1=http://0.0.0.0:2380 \
-  --initial-cluster-token tkn \
-  --initial-cluster-state new
+  --initial-cluster s1=http://0.0.0.0:2380

@@ -39,27 +39,35 @@ func (r *EtcdRegister) Register(service *Service) error {
 	if err != nil {
 		return err
 	}
+	if service.Deployment == "" {
+		service.Deployment = DeploymentDefault
+	}
+	if service.Group == "" {
+		service.Group = DefaultGroup
+	}
 	var (
-		ctx                = context.Background()
+		ctx, _             = context.WithTimeout(context.Background(), time.Second*10)
 		serviceMarshalStr  = string(serviceMarshalBytes)
 		serviceRegisterKey = gstr.Join([]string{
 			r.config.RegistryDir,
-			service.Environment,
+			service.Deployment,
 			service.Group,
-			service.Version,
 			service.AppId,
+			service.Version,
 		}, "/")
 	)
 
+	g.Log().Debugf(`register key: %s`, serviceRegisterKey)
 	resp, err := r.etcd3Client.Grant(ctx, int64(r.config.TTL/time.Second))
 	if err != nil {
 		return err
 	}
+	g.Log().Debugf(`registered grant id: %d`, resp.ID)
 	service.etcdGrantId = resp.ID
 	if _, err := r.etcd3Client.Put(ctx, serviceRegisterKey, serviceMarshalStr, etcd3.WithLease(service.etcdGrantId)); err != nil {
 		return err
 	}
-
+	g.Log().Debugf(`request keepalive for grant id: %d`, resp.ID)
 	keepAliceCh, err := r.etcd3Client.KeepAlive(ctx, resp.ID)
 	if err != nil {
 		return err
@@ -72,13 +80,16 @@ func (r *EtcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 	for {
 		select {
 		case <-r.etcd3Client.Ctx().Done():
+			g.Log().Debugf("keepalive done for grant id: %d", service.etcdGrantId)
 			return
 
-		case _, ok := <-keepAliceCh:
+		case res, ok := <-keepAliceCh:
+			if res != nil {
+				g.Log().Debugf(`keepalive loop: %v, %s`, ok, res.String())
+			}
 			if !ok {
-				if err := r.Unregister(service); err != nil {
-					g.Log().Error(err)
-				}
+				// I do not care about the returned error.
+				//r.Unregister(service)
 				if err := r.Register(service); err != nil {
 					g.Log().Error(err)
 				}

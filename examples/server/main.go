@@ -33,7 +33,7 @@ func StartService() {
 	service := &registry.Service{
 		Name:     "test",
 		AppId:    "test",
-		Version:  "1.0",
+		Version:  "v1.0",
 		Address:  fmt.Sprintf("127.0.0.1:%d", *port),
 		Metadata: g.Map{"weight": 1},
 	}

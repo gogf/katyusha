@@ -2,6 +2,7 @@ package registry
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/frame/g"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
@@ -35,22 +36,21 @@ func newWatcher(key string, cli *etcd3.Client) *Watcher {
 }
 
 func (w *Watcher) GetAllAddresses() []resolver.Address {
-	ret := []resolver.Address{}
-
+	var addresses []resolver.Address
 	resp, err := w.client.Get(w.ctx, w.key, etcd3.WithPrefix())
 	if err == nil {
-		addrs := extractAddrs(resp)
-		if len(addrs) > 0 {
-			for _, addr := range addrs {
+		services := extractServices(resp)
+		if len(services) > 0 {
+			for _, addr := range services {
 				v := addr
-				ret = append(ret, resolver.Address{
+				addresses = append(addresses, resolver.Address{
 					Addr:     v.Address,
 					Metadata: &v.Metadata,
 				})
 			}
 		}
 	}
-	return ret
+	return addresses
 }
 
 func (w *Watcher) Watch() chan []resolver.Address {
@@ -64,9 +64,8 @@ func (w *Watcher) Watch() chan []resolver.Address {
 		w.addrs = w.GetAllAddresses()
 		out <- w.cloneAddresses(w.addrs)
 
-		rch := w.client.Watch(w.ctx, w.key, etcd3.WithPrefix())
-		for wresp := range rch {
-			for _, ev := range wresp.Events {
+		for watchResponse := range w.client.Watch(w.ctx, w.key, etcd3.WithPrefix()) {
+			for _, ev := range watchResponse.Events {
 				switch ev.Type {
 				case mvccpb.PUT:
 					nodeData := Service{}
@@ -97,25 +96,23 @@ func (w *Watcher) Watch() chan []resolver.Address {
 	return out
 }
 
-func extractAddrs(resp *etcd3.GetResponse) []Service {
-	addrs := []Service{}
-
+func extractServices(resp *etcd3.GetResponse) []Service {
+	var services []Service
 	if resp == nil || resp.Kvs == nil {
-		return addrs
+		return services
 	}
-
 	for i := range resp.Kvs {
 		if v := resp.Kvs[i].Value; v != nil {
 			nodeData := Service{}
-			err := json.Unmarshal(v, &nodeData)
-			if err != nil {
-				grpclog.Info("Parse node data error:", err)
+			if err := json.Unmarshal(v, &nodeData); err != nil {
+				g.Log().Errorf("Parse node data error: %v", err)
 				continue
 			}
-			addrs = append(addrs, nodeData)
+			services = append(services, nodeData)
 		}
 	}
-	return addrs
+	g.Log().Debugf(`extractServices: %v`, services)
+	return services
 }
 
 func (w *Watcher) cloneAddresses(in []resolver.Address) []resolver.Address {

@@ -16,12 +16,12 @@ type etcdResolver struct {
 }
 
 func (r *etcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	etcdCli, err := etcd3.New(r.etcdConfig)
+	etcdClient, err := etcd3.New(r.etcdConfig)
 	if err != nil {
 		return nil, err
 	}
 	r.cc = cc
-	r.watcher = newWatcher(r.etcdWatchPath, etcdCli)
+	r.watcher = newWatcher(r.etcdWatchPath, etcdClient)
 	r.start()
 	return r, nil
 }
@@ -51,8 +51,9 @@ func (r *etcdResolver) Close() {
 
 func RegisterResolver(scheme string, etcdConfig etcd3.Config, registryDir, srvName, srvVersion string) {
 	resolver.Register(&etcdResolver{
-		scheme:        scheme,
-		etcdConfig:    etcdConfig,
-		etcdWatchPath: registryDir + "/" + srvName + "/" + srvVersion,
+		scheme:     scheme,
+		etcdConfig: etcdConfig,
+		//etcdWatchPath: registryDir + "/" + srvName + "/" + srvVersion,
+		etcdWatchPath: registryDir + "/default/default/test/v1.0",
 	})
 }
