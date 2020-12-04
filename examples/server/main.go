@@ -1,56 +1,52 @@
 package main
 
 import (
-	"flag"
-	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/os/genv"
+	"github.com/gogf/katyusha/discovery"
 	"github.com/gogf/katyusha/examples/proto"
-	"github.com/gogf/katyusha/registry"
-	"github.com/gogf/katyusha/server"
-	etcd3 "go.etcd.io/etcd/client/v3"
+	"github.com/gogf/katyusha/krpc"
 	"golang.org/x/net/context"
 	"log"
-	"time"
 )
-
-var nodeID = flag.String("node", "node1", "node ID")
-var port = flag.Int("port", 8080, "listening port")
 
 type helloServer struct{}
 
 func (s *helloServer) Say(ctx context.Context, req *proto.SayReq) (*proto.SayResp, error) {
-	text := "Hello " + req.Content + ", I am " + *nodeID
-	log.Println(text)
-
+	text := "Hello " + req.Content + ", I am " + gcmd.GetOpt("node")
+	g.Log().Println("Say:", text)
 	return &proto.SayResp{Content: text}, nil
 }
 
-func StartService() {
-
-	register, err := registry.NewRegister(&registry.EtcdConfig{
-		RegistryDir: "/backend/services",
-		TTL:         10 * time.Second,
-		EtcdConfig: &etcd3.Config{
-			Endpoints: []string{"127.0.0.1:2379"},
-		},
+// go run main.go -node node1 -port 28544
+// go run main.go -node node2 -port 18562
+// go run main.go -node node3 -port 27772
+func main() {
+	genv.SetMap(g.MapStrStr{
+		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
+
+	register, err := discovery.NewRegister()
 	if err != nil {
 		log.Panic(err)
 		return
 	}
-	service := &registry.Service{
-		Name:     "test",
-		AppId:    "test",
-		Version:  "v1.0",
-		Address:  fmt.Sprintf("127.0.0.1:%d", *port),
-		Metadata: g.Map{"weight": 1},
-	}
-	s := server.NewGrpcServer(server.GrpcServerConfig{
-		Addr: fmt.Sprintf("0.0.0.0:%d", *port),
+
+	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
+		Addr: "0.0.0.0:" + gcmd.GetOpt("port"),
 	})
 	proto.RegisterTestServer(s.Server, new(helloServer))
 	s.Start()
-	if err := register.Register(service); err != nil {
+
+	err = register.Register(&discovery.Service{
+		Name:     "test",
+		AppId:    "test",
+		Version:  "v1.0",
+		Address:  "127.0.0.1:" + gcmd.GetOpt("port"),
+		Metadata: g.Map{"weight": 1},
+	})
+	if err != nil {
 		panic(err)
 	}
 	s.Wait()
@@ -61,12 +57,4 @@ func StartService() {
 	//register.Unregister(service)
 	//s.Stop()
 
-}
-
-// go run main.go -node node1 -port 28544
-// go run main.go -node node2 -port 18562
-// go run main.go -node node3 -port 27772
-func main() {
-	flag.Parse()
-	StartService()
 }

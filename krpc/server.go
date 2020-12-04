@@ -1,8 +1,8 @@
-package server
+package krpc
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/katyusha/registry"
+	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
 	"net"
 	"sync"
@@ -12,7 +12,7 @@ import (
 type GrpcServer struct {
 	Server    *grpc.Server
 	config    GrpcServerConfig
-	register  registry.Register
+	register  discovery.Register
 	waitGroup sync.WaitGroup
 }
 

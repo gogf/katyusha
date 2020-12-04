@@ -1,6 +1,10 @@
-package registry
+package discovery
 
 import (
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/text/gstr"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/resolver"
 	"sync"
@@ -8,9 +12,6 @@ import (
 
 // EtcdResolver implements interface resolver.Builder.
 type EtcdResolver struct {
-	EtcdScheme  string      // Scheme returns the scheme supported by this resolver.
-	EtcdConfig  *EtcdConfig // ETCD configuration object.
-	Service     *Service    // Service configuration.
 	etcdWatcher *EtcdWatcher
 	clientConn  resolver.ClientConn
 	waitGroup   sync.WaitGroup
@@ -18,17 +19,27 @@ type EtcdResolver struct {
 
 // Build implements interface google.golang.org/grpc/resolver.Builder.
 func (r *EtcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
-	etcdClient, err := etcd3.New(*r.EtcdConfig.EtcdConfig)
+	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
+	if len(endpoints) == 0 {
+		return nil, gerror.New(`endpoints not found from environment or command-line`)
+	}
+	etcdClient, err := etcd3.New(etcd3.Config{
+		Endpoints: endpoints,
+	})
 	if err != nil {
 		return nil, err
 	}
 	r.clientConn = cc
-	r.etcdWatcher = newEtcdWatcher(r.Service.RegisterKey(r.EtcdConfig.RegistryDir), etcdClient)
+	r.etcdWatcher = newEtcdWatcher(
+		gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
+		etcdClient,
+	)
 	r.waitGroup.Add(1)
 	go func() {
 		defer r.waitGroup.Done()
-		for addr := range r.etcdWatcher.Watch() {
-			r.clientConn.UpdateState(resolver.State{Addresses: addr})
+		for address := range r.etcdWatcher.Watch() {
+			g.Log().Debugf(`UpdateState: %v`, address)
+			r.clientConn.UpdateState(resolver.State{Addresses: address})
 		}
 	}()
 	return r, nil
@@ -36,7 +47,7 @@ func (r *EtcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opt
 
 // Scheme implements interface google.golang.org/grpc/resolver.Builder.
 func (r *EtcdResolver) Scheme() string {
-	return r.EtcdScheme
+	return DefaultScheme
 }
 
 // ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.

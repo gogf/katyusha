@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/katyusha/balancer"
+	"github.com/gogf/katyusha/discovery"
 	"github.com/gogf/katyusha/examples/proto"
-	"github.com/gogf/katyusha/registry"
-	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/resolver"
@@ -13,25 +14,13 @@ import (
 )
 
 func main() {
-	etcdConfig := &registry.EtcdConfig{
-		RegistryDir:  "/backend/services",
-		KeepaliveTtl: 10 * time.Second,
-		EtcdConfig: &etcd3.Config{
-			Endpoints: []string{"127.0.0.1:2379"},
-		},
-	}
-	service := &registry.Service{
-		Name:    "test",
-		AppId:   "test",
-		Version: "v1.0",
-	}
-	resolver.Register(&registry.EtcdResolver{
-		EtcdScheme: "etcd3",
-		EtcdConfig: etcdConfig,
-		Service:    service,
+	genv.SetMap(g.MapStrStr{
+		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
 
-	c, err := grpc.Dial("etcd3:///", grpc.WithInsecure(), grpc.WithBalancerName(balancer.RoundRobin))
+	resolver.Register(&discovery.EtcdResolver{})
+
+	c, err := grpc.Dial(discovery.DefaultScheme+":///", grpc.WithInsecure(), grpc.WithBalancerName(balancer.RoundRobin))
 	if err != nil {
 		log.Printf("grpc dial: %s", err)
 		return
@@ -42,11 +31,11 @@ func main() {
 	for i := 0; i < 500; i++ {
 		resp, err := client.Say(context.Background(), &proto.SayReq{Content: "round robin"})
 		if err != nil {
-			log.Println("aa:", err)
+			panic(err)
 			time.Sleep(time.Second)
 			continue
 		}
 		time.Sleep(time.Second)
-		log.Printf(resp.Content)
+		g.Log().Print("Response:", resp.Content)
 	}
 }

@@ -1,8 +1,11 @@
-package registry
+package discovery
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/text/gstr"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"sync"
@@ -11,54 +14,54 @@ import (
 
 type EtcdRegister struct {
 	sync.RWMutex
-	config      *EtcdConfig
-	etcd3Client *etcd3.Client
-	etcdGrantId etcd3.LeaseID
+	etcd3Client  *etcd3.Client
+	keepaliveTtl time.Duration
+	etcdGrantId  etcd3.LeaseID
 }
 
-type EtcdConfig struct {
-	EtcdConfig   *etcd3.Config
-	RegistryDir  string
-	KeepaliveTtl time.Duration
-}
-
-func NewRegister(config *EtcdConfig) (Register, error) {
-	client, err := etcd3.New(*config.EtcdConfig)
+func NewRegister() (Register, error) {
+	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
+	if len(endpoints) == 0 {
+		return nil, gerror.New(`endpoints not found from environment or command-line`)
+	}
+	client, err := etcd3.New(etcd3.Config{
+		Endpoints: endpoints,
+	})
 	if err != nil {
 		return nil, err
 	}
-	if config.KeepaliveTtl == 0 {
-		config.KeepaliveTtl = DefaultKeepAliveTtl
-	}
 	registry := &EtcdRegister{
-		etcd3Client: client,
-		config:      config,
+		etcd3Client:  client,
+		keepaliveTtl: gcmd.GetWithEnv("", DefaultKeepAliveTtl).Duration(),
 	}
 	return registry, nil
 }
 
 func (r *EtcdRegister) Register(service *Service) error {
+	if service.Deployment == "" {
+		service.Deployment = gcmd.GetWithEnv(EnvKeyDeployment, DefaultDeployment).String()
+	}
+	if service.Group == "" {
+		service.Group = gcmd.GetWithEnv(EnvKeyGroup, DefaultGroup).String()
+	}
+	if service.Version == "" {
+		service.Version = gcmd.GetWithEnv(EnvKeyVersion, DefaultVersion).String()
+	}
 	serviceMarshalBytes, err := json.Marshal(service)
 	if err != nil {
 		return err
 	}
-	if service.Deployment == "" {
-		service.Deployment = DeploymentDefault
-	}
-	if service.Group == "" {
-		service.Group = DefaultGroup
-	}
 	var (
 		serviceMarshalStr  = string(serviceMarshalBytes)
-		serviceRegisterKey = service.RegisterKey(r.config.RegistryDir)
+		serviceRegisterKey = service.RegisterKey()
 	)
 
 	g.Log().Debugf(`register key: %s`, serviceRegisterKey)
-	resp, err := r.etcd3Client.Grant(context.Background(), int64(r.config.KeepaliveTtl/time.Second))
+	resp, err := r.etcd3Client.Grant(context.Background(), int64(r.keepaliveTtl/time.Second))
 	if err != nil {
 		return err
 	}
-	g.Log().Debugf(`registered grant id: %d`, resp.ID)
+	g.Log().Debugf(`registered: %d, %s`, resp.ID, serviceMarshalStr)
 	r.etcdGrantId = resp.ID
 	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, serviceMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
 		return err
@@ -84,6 +87,7 @@ func (r *EtcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 				g.Log().Debugf(`keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
+				g.Log().Debugf(`keepalive Unregister: %s`, r.etcdGrantId)
 				r.Unregister(service)
 				if err := r.Register(service); err != nil {
 					g.Log().Error(err)

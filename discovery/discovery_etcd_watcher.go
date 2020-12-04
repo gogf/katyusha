@@ -1,4 +1,4 @@
-package registry
+package discovery
 
 import (
 	"encoding/json"
@@ -46,7 +46,7 @@ func (w *EtcdWatcher) GetAllAddresses() []resolver.Address {
 				clonedService := service
 				addresses = append(addresses, resolver.Address{
 					Addr:       clonedService.Address,
-					Attributes: attributes.New(gconv.Interfaces(clonedService.Metadata)),
+					Attributes: attributes.New(gconv.Interfaces(clonedService.Metadata)...),
 				})
 			}
 		}
@@ -54,6 +54,7 @@ func (w *EtcdWatcher) GetAllAddresses() []resolver.Address {
 	return addresses
 }
 
+// Watch keeps watching the registered prefix key events.
 func (w *EtcdWatcher) Watch() chan []resolver.Address {
 	out := make(chan []resolver.Address, 10)
 	w.wg.Add(1)
@@ -77,7 +78,7 @@ func (w *EtcdWatcher) Watch() chan []resolver.Address {
 					}
 					address := resolver.Address{
 						Addr:       nodeData.Address,
-						Attributes: attributes.New(gconv.Interfaces(nodeData.Metadata)),
+						Attributes: attributes.New(gconv.Interfaces(nodeData.Metadata)...),
 					}
 					if w.addAddr(address) {
 						out <- w.cloneAddresses(w.addresses)
@@ -90,7 +91,7 @@ func (w *EtcdWatcher) Watch() chan []resolver.Address {
 					}
 					address := resolver.Address{
 						Addr:       nodeData.Address,
-						Attributes: attributes.New(gconv.Interfaces(nodeData.Metadata)),
+						Attributes: attributes.New(gconv.Interfaces(nodeData.Metadata)...),
 					}
 					if w.removeAddr(address) {
 						out <- w.cloneAddresses(w.addresses)
