@@ -14,8 +14,8 @@ import (
 
 func main() {
 	etcdConfig := &registry.EtcdConfig{
-		RegistryDir: "/backend/services",
-		TTL:         10 * time.Second,
+		RegistryDir:  "/backend/services",
+		KeepaliveTtl: 10 * time.Second,
 		EtcdConfig: &etcd3.Config{
 			Endpoints: []string{"127.0.0.1:2379"},
 		},

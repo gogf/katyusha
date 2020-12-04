@@ -26,25 +26,24 @@ func (s *helloServer) Say(ctx context.Context, req *proto.SayReq) (*proto.SayRes
 }
 
 func StartService() {
+
+	register, err := registry.NewRegister(&registry.EtcdConfig{
+		RegistryDir: "/backend/services",
+		TTL:         10 * time.Second,
+		EtcdConfig: &etcd3.Config{
+			Endpoints: []string{"127.0.0.1:2379"},
+		},
+	})
+	if err != nil {
+		log.Panic(err)
+		return
+	}
 	service := &registry.Service{
 		Name:     "test",
 		AppId:    "test",
 		Version:  "v1.0",
 		Address:  fmt.Sprintf("127.0.0.1:%d", *port),
 		Metadata: g.Map{"weight": 1},
-	}
-
-	register, err := registry.NewRegister(
-		&registry.EtcdConfig{
-			RegistryDir: "/backend/services",
-			TTL:         10 * time.Second,
-			EtcdConfig: &etcd3.Config{
-				Endpoints: []string{"127.0.0.1:2379"},
-			},
-		})
-	if err != nil {
-		log.Panic(err)
-		return
 	}
 	s := server.NewGrpcServer(server.GrpcServerConfig{
 		Addr: fmt.Sprintf("0.0.0.0:%d", *port),

@@ -3,9 +3,11 @@ package registry
 import (
 	"encoding/json"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/util/gconv"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 	"sync"
 )
@@ -40,11 +42,11 @@ func (w *EtcdWatcher) GetAllAddresses() []resolver.Address {
 	if err == nil {
 		services := extractServices(resp)
 		if len(services) > 0 {
-			for _, addr := range services {
-				v := addr
+			for _, service := range services {
+				clonedService := service
 				addresses = append(addresses, resolver.Address{
-					Addr:     v.Address,
-					Metadata: &v.Metadata,
+					Addr:       clonedService.Address,
+					Attributes: attributes.New(gconv.Interfaces(clonedService.Metadata)),
 				})
 			}
 		}
@@ -73,8 +75,11 @@ func (w *EtcdWatcher) Watch() chan []resolver.Address {
 						g.Log().Error(err)
 						continue
 					}
-					addr := resolver.Address{Addr: nodeData.Address, Metadata: &nodeData.Metadata}
-					if w.addAddr(addr) {
+					address := resolver.Address{
+						Addr:       nodeData.Address,
+						Attributes: attributes.New(gconv.Interfaces(nodeData.Metadata)),
+					}
+					if w.addAddr(address) {
 						out <- w.cloneAddresses(w.addresses)
 					}
 				case mvccpb.DELETE:
@@ -83,8 +88,11 @@ func (w *EtcdWatcher) Watch() chan []resolver.Address {
 						g.Log().Error(err)
 						continue
 					}
-					addr := resolver.Address{Addr: nodeData.Address, Metadata: &nodeData.Metadata}
-					if w.removeAddr(addr) {
+					address := resolver.Address{
+						Addr:       nodeData.Address,
+						Attributes: attributes.New(gconv.Interfaces(nodeData.Metadata)),
+					}
+					if w.removeAddr(address) {
 						out <- w.cloneAddresses(w.addresses)
 					}
 				}
