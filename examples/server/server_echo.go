@@ -24,18 +24,14 @@ func (s *serviceEcho) Say(ctx context.Context, r *proto.SayReq) (*proto.SayRes, 
 // go run server_echo.go -node node3 -port 8002
 func main() {
 	genv.SetMap(g.MapStrStr{
+		discovery.EnvKeyAppId:     `echo`,
+		discovery.EnvKeyMetaData:  `{"weight":100}`,
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
-
 	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
-		Addr: "0.0.0.0:" + gcmd.GetOpt("port"),
+		Address: "0.0.0.0:" + gcmd.GetOpt("port"),
 	})
 	proto.RegisterEchoServer(s.Server, new(serviceEcho))
-	s.Service(&discovery.Service{
-		AppId:    "echo",
-		Version:  "v1.0",
-		Metadata: g.Map{"weight": 1},
-	})
 	s.Run()
 
 	//signalChan := make(chan os.Signal, 1)

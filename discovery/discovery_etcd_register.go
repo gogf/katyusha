@@ -18,6 +18,7 @@ type etcdRegister struct {
 	etcd3Client  *etcd3.Client
 	keepaliveTtl time.Duration
 	etcdGrantId  etcd3.LeaseID
+	services     []*Service
 }
 
 var (
@@ -53,6 +54,11 @@ func Register(service *Service) error {
 		return err
 	}
 	return defaultRegistry.Register(service)
+}
+
+// Services returns all registered service list.
+func Services() []*Service {
+	return defaultRegistry.Services()
 }
 
 // Unregister removes `service` from ETCD.
@@ -120,6 +126,7 @@ func (r *etcdRegister) Register(service *Service) error {
 	if err != nil {
 		return err
 	}
+	r.services = append(r.services, service)
 	go r.keepAlive(service, keepAliceCh)
 	return nil
 }
@@ -148,8 +155,19 @@ func (r *etcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 	}
 }
 
+// Services returns all registered service list.
+func (r *etcdRegister) Services() []*Service {
+	return r.services
+}
+
 // Unregister removes `service` from ETCD.
 func (r *etcdRegister) Unregister(service *Service) error {
+	for i, s := range r.services {
+		if s.AppId == service.AppId {
+			r.services = append(r.services[:i], r.services[i+1:]...)
+			break
+		}
+	}
 	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantId)
 	return err
 }

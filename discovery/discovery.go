@@ -15,13 +15,14 @@ type Service struct {
 	Deployment string // (optional)  Service deployment name, eg: dev, qa, staging, prod, etc.
 	Group      string // (optional)  Service group, to indicate different service in the same environment with the same Name and AppId.
 	Version    string // (optional)  Service version, eg: v1.0.0, v2.1.1, etc.
-	Metadata   g.Map  // (optional)  Custom data for this service.
+	Metadata   g.Map  // (optional)  Custom data for this service, which can be set using JSON by environment or command-line.
 }
 
 // Registry interface for service.
 type Registry interface {
 	Register(service *Service) error
 	Unregister(service *Service) error
+	Services() []*Service
 	Close() error
 }
 
@@ -33,6 +34,7 @@ const (
 	EnvKeyVersion    = "KA_VERSION"
 	EnvKeyDeployment = "KA_DEPLOYMENT"
 	EnvKeyGroup      = "KA_GROUP"
+	EnvKeyMetaData   = "KA_METADATA"
 	EnvKeyEndpoints  = "KA_ENDPOINTS"
 )
 

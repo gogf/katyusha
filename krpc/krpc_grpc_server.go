@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gipv4"
+	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
@@ -21,7 +22,7 @@ type GrpcServer struct {
 
 // GrpcServerConfig is the configuration for server.
 type GrpcServerConfig struct {
-	Addr string // Address for server listening.
+	Address string // Address for server listening.
 }
 
 // GrpcServerOption is alias for grpc.ServerOption.
@@ -29,10 +30,10 @@ type GrpcServerOption = grpc.ServerOption
 
 // NewGrpcServer creates and returns a grpc server.
 func NewGrpcServer(config GrpcServerConfig, option ...GrpcServerOption) *GrpcServer {
-	if config.Addr == "" {
+	if config.Address == "" {
 		panic("server address cannot be empty")
 	}
-	if !gstr.Contains(config.Addr, ":") {
+	if !gstr.Contains(config.Address, ":") {
 		panic("invalid service address, should contain listening port")
 	}
 	server := &GrpcServer{
@@ -47,7 +48,7 @@ func NewGrpcServer(config GrpcServerConfig, option ...GrpcServerOption) *GrpcSer
 func (s *GrpcServer) Service(services ...*discovery.Service) {
 	var (
 		serviceAddress string
-		array          = gstr.Split(s.config.Addr, ":")
+		array          = gstr.Split(s.config.Address, ":")
 	)
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIp, err := gipv4.GetIntranetIp()
@@ -56,7 +57,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 		}
 		serviceAddress = fmt.Sprintf(`%s:%s`, intraIp, array[1])
 	} else {
-		serviceAddress = s.config.Addr
+		serviceAddress = s.config.Address
 	}
 	for _, service := range services {
 		if service.Address == "" {
@@ -68,9 +69,19 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() error {
-	listener, err := net.Listen("tcp", s.config.Addr)
+	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
 		return err
+	}
+	if len(s.services) == 0 {
+		appId := gcmd.GetWithEnv(discovery.EnvKeyAppId).String()
+		if appId != "" {
+			// Automatically creating service if app id can be retrieved
+			// from environment or command-line.
+			s.Service(&discovery.Service{
+				AppId: appId,
+			})
+		}
 	}
 	// Register service list after server starts.
 	for _, service := range s.services {
@@ -78,7 +89,7 @@ func (s *GrpcServer) Run() error {
 			return err
 		}
 	}
-	g.Log().Printf("grpc server start listening on: %s", s.config.Addr)
+	g.Log().Printf("grpc server start listening on: %s", s.config.Address)
 	return s.Server.Serve(listener)
 }
 
