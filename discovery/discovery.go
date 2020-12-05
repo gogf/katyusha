@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"encoding/json"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
@@ -13,7 +14,6 @@ type Service struct {
 	Group      string // Service group, to indicate different service in the same environment with the same Name and AppId.
 	AppId      string // Unique id for the service, only for service discovery.
 	Version    string // Service version, eg: v1.0.0, v2.1.1, etc.
-	Name       string // Service Name, for manually readable display.
 	Address    string // Service address, usually IP:port .
 	Metadata   g.Map  // Custom data for this service.
 }
@@ -53,5 +53,26 @@ func (s *Service) RegisterKey() string {
 		s.Group,
 		s.AppId,
 		s.Version,
+		s.Address,
 	}, "/")
+}
+
+// newServiceFromKeyValue creates and returns service from `key` and `value`.
+func newServiceFromKeyValue(key, value []byte) *Service {
+	array := gstr.SplitAndTrim(string(key), "/")
+	if len(array) < 6 {
+		return nil
+	}
+	service := &Service{
+		Deployment: array[1],
+		Group:      array[2],
+		AppId:      array[3],
+		Version:    array[4],
+		Address:    array[5],
+		Metadata:   make(g.Map),
+	}
+	if len(value) > 0 {
+		json.Unmarshal(value, &service.Metadata)
+	}
+	return service
 }

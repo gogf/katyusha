@@ -10,53 +10,67 @@ import (
 	"sync"
 )
 
-// EtcdResolver implements interface resolver.Builder.
-type EtcdResolver struct {
+// defaultBuilder implements interface resolver.Builder.
+type defaultBuilder struct {
 	etcdWatcher *EtcdWatcher
-	clientConn  resolver.ClientConn
-	waitGroup   sync.WaitGroup
+	waitGroup   sync.WaitGroup // Used for gracefully close the builder.
+}
+
+func init() {
+	// It uses default builder handling the DNS for grpc service requests.
+	resolver.Register(&defaultBuilder{})
 }
 
 // Build implements interface google.golang.org/grpc/resolver.Builder.
-func (r *EtcdResolver) Build(target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions) (resolver.Resolver, error) {
+func (r *defaultBuilder) Build(target resolver.Target, clientConn resolver.ClientConn, options resolver.BuildOptions) (resolver.Resolver, error) {
+	g.Log().Debug("Build", target, clientConn, options)
+	if target.Endpoint == "" {
+		return nil, gerror.New(`requested app id cannot be empty`)
+	}
 	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
 	if len(endpoints) == 0 {
-		return nil, gerror.New(`endpoints not found from environment or command-line`)
+		return nil, gerror.New(`discovery server endpoints not found from environment or command-line`)
 	}
-	etcdClient, err := etcd3.New(etcd3.Config{
-		Endpoints: endpoints,
-	})
-	if err != nil {
-		return nil, err
+	// ETCD watcher initialization.
+	if r.etcdWatcher == nil {
+		etcdClient, err := etcd3.New(etcd3.Config{
+			Endpoints: endpoints,
+		})
+		if err != nil {
+			return nil, err
+		}
+		r.etcdWatcher = newEtcdWatcher(
+			gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
+			etcdClient,
+		)
 	}
-	r.clientConn = cc
-	r.etcdWatcher = newEtcdWatcher(
-		gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
-		etcdClient,
-	)
 	r.waitGroup.Add(1)
 	go func() {
 		defer r.waitGroup.Done()
-		for address := range r.etcdWatcher.Watch() {
-			g.Log().Debugf(`UpdateState: %v`, address)
-			r.clientConn.UpdateState(resolver.State{Addresses: address})
+		for addresses := range r.etcdWatcher.Watch(target.Endpoint) {
+			g.Log().Debugf(`AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
+			if len(addresses) > 0 {
+				clientConn.UpdateState(resolver.State{
+					Addresses: addresses,
+				})
+			}
 		}
 	}()
 	return r, nil
 }
 
 // Scheme implements interface google.golang.org/grpc/resolver.Builder.
-func (r *EtcdResolver) Scheme() string {
+func (r *defaultBuilder) Scheme() string {
 	return DefaultScheme
 }
 
 // ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.
-func (r *EtcdResolver) ResolveNow(o resolver.ResolveNowOptions) {
+func (r *defaultBuilder) ResolveNow(o resolver.ResolveNowOptions) {
 
 }
 
 // Close implements interface google.golang.org/grpc/resolver.Resolver.
-func (r *EtcdResolver) Close() {
+func (r *defaultBuilder) Close() {
 	r.etcdWatcher.Close()
 	r.waitGroup.Wait()
 }

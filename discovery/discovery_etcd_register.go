@@ -47,12 +47,12 @@ func (r *EtcdRegister) Register(service *Service) error {
 	if service.Version == "" {
 		service.Version = gcmd.GetWithEnv(EnvKeyVersion, DefaultVersion).String()
 	}
-	serviceMarshalBytes, err := json.Marshal(service)
+	metadataMarshalBytes, err := json.Marshal(service.Metadata)
 	if err != nil {
 		return err
 	}
 	var (
-		serviceMarshalStr  = string(serviceMarshalBytes)
+		metadataMarshalStr = string(metadataMarshalBytes)
 		serviceRegisterKey = service.RegisterKey()
 	)
 
@@ -61,9 +61,9 @@ func (r *EtcdRegister) Register(service *Service) error {
 	if err != nil {
 		return err
 	}
-	g.Log().Debugf(`registered: %d, %s`, resp.ID, serviceMarshalStr)
+	g.Log().Debugf(`registered: %d, %s`, resp.ID, metadataMarshalStr)
 	r.etcdGrantId = resp.ID
-	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, serviceMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
+	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
 		return err
 	}
 	g.Log().Debugf(`request keepalive for grant id: %d`, resp.ID)

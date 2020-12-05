@@ -13,6 +13,7 @@ require (
 	golang.org/x/text v0.3.4 // indirect
 	google.golang.org/genproto v0.0.0-20201119123407-9b1e624d6bc4 // indirect
 	google.golang.org/grpc v1.29.1
+	google.golang.org/protobuf v1.24.0
 )
 
 replace (

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/genv"
@@ -11,17 +12,17 @@ import (
 	"log"
 )
 
-type helloServer struct{}
+type serviceEcho struct{}
 
-func (s *helloServer) Say(ctx context.Context, req *proto.SayReq) (*proto.SayResp, error) {
-	text := "Hello " + req.Content + ", I am " + gcmd.GetOpt("node")
-	g.Log().Println("Say:", text)
-	return &proto.SayResp{Content: text}, nil
+func (s *serviceEcho) Say(ctx context.Context, r *proto.SayReq) (*proto.SayRes, error) {
+	g.Log().Println("Received:", r.Content)
+	text := fmt.Sprintf(`%s: > %s`, gcmd.GetOpt("node"), r.Content)
+	return &proto.SayRes{Content: text}, nil
 }
 
-// go run main.go -node node1 -port 28544
-// go run main.go -node node2 -port 18562
-// go run main.go -node node3 -port 27772
+// go run server_echo.go -node node1 -port 8000
+// go run server_echo.go -node node2 -port 8001
+// go run server_echo.go -node node3 -port 8002
 func main() {
 	genv.SetMap(g.MapStrStr{
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
@@ -36,12 +37,11 @@ func main() {
 	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
 		Addr: "0.0.0.0:" + gcmd.GetOpt("port"),
 	})
-	proto.RegisterTestServer(s.Server, new(helloServer))
+	proto.RegisterEchoServer(s.Server, new(serviceEcho))
 	s.Start()
 
 	err = register.Register(&discovery.Service{
-		Name:     "test",
-		AppId:    "test",
+		AppId:    "echo",
 		Version:  "v1.0",
 		Address:  "127.0.0.1:" + gcmd.GetOpt("port"),
 		Metadata: g.Map{"weight": 1},
