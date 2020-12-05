@@ -26,7 +26,7 @@ func main() {
 		for i := 0; i < 500; i++ {
 			res, err := echoClient.Say(context.Background(), &proto.SayReq{Content: "Hello"})
 			if err != nil {
-				panic(err)
+				g.Log().Error(err)
 				time.Sleep(time.Second)
 				continue
 			}
@@ -46,7 +46,7 @@ func main() {
 	for i := 0; i < 500; i++ {
 		res, err := client.Now(context.Background(), &proto.NowReq{})
 		if err != nil {
-			panic(err)
+			g.Log().Error(err)
 			time.Sleep(time.Second)
 			continue
 		}
