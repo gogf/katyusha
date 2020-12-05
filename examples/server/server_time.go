@@ -33,11 +33,4 @@ func main() {
 	})
 	proto.RegisterTimeServer(s.Server, new(serviceTime))
 	s.Run()
-
-	//signalChan := make(chan os.Signal, 1)
-	//signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
-	//<-signalChan
-	//register.Unregister(service)
-	//s.Stop()
-
 }

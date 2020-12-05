@@ -1,7 +1,6 @@
 package discovery
 
 import (
-	"github.com/gogf/gf/container/gmap"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gconv"
 	"go.etcd.io/etcd/api/v3/mvccpb"
@@ -18,7 +17,7 @@ type etcdWatcher struct {
 	cancelFunc context.CancelFunc // Cancel function for this context.
 	etcdClient *etcd3.Client      // ETCD client.
 	waitGroup  sync.WaitGroup     // WaitGroup for gracefully closing..
-	addressMap *gmap.StrAnyMap    // Service AppId to its address list mapping, type: map[string][]resolver.Address.
+	addresses  []resolver.Address // Address list for certain service.
 }
 
 func newEtcdWatcher(etcdClient *etcd3.Client, key string) *etcdWatcher {
@@ -28,14 +27,14 @@ func newEtcdWatcher(etcdClient *etcd3.Client, key string) *etcdWatcher {
 		ctx:        ctx,
 		cancelFunc: cancelFunc,
 		etcdClient: etcdClient,
-		addressMap: gmap.NewStrAnyMap(true),
+		addresses:  make([]resolver.Address, 0),
 	}
 	return w
 }
 
 // Watch keeps watching the registered prefix key events.
-func (w *etcdWatcher) Watch(appId string) chan []resolver.Address {
-	w.initialize()
+func (w *etcdWatcher) Watch() chan []resolver.Address {
+	w.initializeAddresses()
 	addressCh := make(chan []resolver.Address, 10)
 	w.waitGroup.Add(1)
 	go func() {
@@ -43,7 +42,7 @@ func (w *etcdWatcher) Watch(appId string) chan []resolver.Address {
 			close(addressCh)
 			w.waitGroup.Done()
 		}()
-		w.updateAddressesToCh(appId, addressCh)
+		w.updateAddressesToCh(addressCh)
 		// Watch events handling.
 		for watchResponse := range w.etcdClient.Watch(w.ctx, w.key, etcd3.WithPrefix()) {
 			for _, ev := range watchResponse.Events {
@@ -59,10 +58,8 @@ func (w *etcdWatcher) Watch(appId string) chan []resolver.Address {
 						Addr:       service.Address,
 						Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
 					}
-					if w.addAddress(service.AppId, address) {
-						if service.AppId == appId {
-							w.updateAddressesToCh(service.AppId, addressCh)
-						}
+					if w.addAddress(address) {
+						w.updateAddressesToCh(addressCh)
 					}
 
 				case mvccpb.DELETE:
@@ -75,10 +72,8 @@ func (w *etcdWatcher) Watch(appId string) chan []resolver.Address {
 						Addr:       service.Address,
 						Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
 					}
-					if w.removeAddress(service.AppId, address) {
-						if service.AppId == appId {
-							w.updateAddressesToCh(service.AppId, addressCh)
-						}
+					if w.removeAddress(address) {
+						w.updateAddressesToCh(addressCh)
 					}
 				}
 			}
@@ -87,27 +82,22 @@ func (w *etcdWatcher) Watch(appId string) chan []resolver.Address {
 	return addressCh
 }
 
-// Initialize retrieves data from discovery server and initializes the address map.
-func (w *etcdWatcher) initialize() {
-	w.addressMap.LockFunc(func(m map[string]interface{}) {
-		if len(m) == 0 {
-			res, err := w.etcdClient.Get(w.ctx, w.key, etcd3.WithPrefix())
-			if err == nil {
-				services := extractServices(res)
-				if len(services) > 0 {
-					for _, service := range services {
-						if _, ok := m[service.AppId]; !ok {
-							m[service.AppId] = make([]resolver.Address, 0)
-						}
-						m[service.AppId] = append(m[service.AppId].([]resolver.Address), resolver.Address{
-							Addr:       service.Address,
-							Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
-						})
-					}
-				}
-			}
+// initializeAddresses retrieves data from discovery server and initializes the address list.
+func (w *etcdWatcher) initializeAddresses() {
+	res, err := w.etcdClient.Get(w.ctx, w.key, etcd3.WithPrefix())
+	if err != nil || res == nil {
+		return
+	}
+	services := extractServices(res)
+	if len(services) > 0 {
+		w.addresses = make([]resolver.Address, 0)
+		for _, service := range services {
+			w.addresses = append(w.addresses, resolver.Address{
+				Addr:       service.Address,
+				Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
+			})
 		}
-	})
+	}
 }
 
 // extractServices extracts etcd watch response context to service list.
@@ -125,53 +115,32 @@ func extractServices(resp *etcd3.GetResponse) []*Service {
 	return services
 }
 
-func (w *etcdWatcher) updateAddressesToCh(appId string, addressCh chan []resolver.Address) {
+func (w *etcdWatcher) updateAddressesToCh(addressCh chan []resolver.Address) {
 	clonedAddresses := make([]resolver.Address, 0)
-	w.addressMap.RLockFunc(func(m map[string]interface{}) {
-		if v := m[appId]; v == nil {
-			return
-		} else {
-			for _, address := range v.([]resolver.Address) {
-				clonedAddresses = append(clonedAddresses, address)
-			}
-		}
-	})
-	if len(clonedAddresses) > 0 {
-		addressCh <- clonedAddresses
+	for _, address := range w.addresses {
+		clonedAddresses = append(clonedAddresses, address)
 	}
+	addressCh <- clonedAddresses
 }
 
-func (w *etcdWatcher) addAddress(appId string, address resolver.Address) bool {
-	w.addressMap.LockFunc(func(m map[string]interface{}) {
-		if _, ok := m[appId]; !ok {
-			m[appId] = make([]resolver.Address, 0)
+func (w *etcdWatcher) addAddress(address resolver.Address) bool {
+	for _, v := range w.addresses {
+		if address.Addr == v.Addr {
+			// Already added.
+			return false
 		}
-		for _, v := range m[appId].([]resolver.Address) {
-			if address.Addr == v.Addr {
-				// Already added.
-				return
-			}
-		}
-		m[appId] = append(m[appId].([]resolver.Address), address)
-	})
+	}
+	w.addresses = append(w.addresses, address)
 	return true
 }
 
-func (w *etcdWatcher) removeAddress(appId string, address resolver.Address) bool {
-	w.addressMap.LockFunc(func(m map[string]interface{}) {
-		if _, ok := m[appId]; !ok {
-			m[appId] = make([]resolver.Address, 0)
+func (w *etcdWatcher) removeAddress(address resolver.Address) bool {
+	for i, v := range w.addresses {
+		if address.Addr == v.Addr {
+			w.addresses = append(w.addresses[:i], w.addresses[i+1:]...)
+			return true
 		}
-		for i, v := range m[appId].([]resolver.Address) {
-			if address.Addr == v.Addr {
-				m[appId] = append(
-					m[appId].([]resolver.Address)[:i],
-					m[appId].([]resolver.Address)[i+1:]...,
-				)
-				return
-			}
-		}
-	})
+	}
 	return false
 }
 

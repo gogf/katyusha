@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
-	etcd3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc/resolver"
 	"sync"
 )
@@ -27,39 +26,33 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 	if target.Endpoint == "" {
 		return nil, gerror.New(`requested app id cannot be empty`)
 	}
-	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
-	if len(endpoints) == 0 {
-		return nil, gerror.New(`discovery server endpoints not found from environment or command-line`)
-	}
 	// ETCD watcher initialization.
 	if r.etcdWatcher == nil {
-		etcdClient, err := etcd3.New(etcd3.Config{
-			Endpoints: endpoints,
-		})
+		etcdClient, err := getEtcdClient()
 		if err != nil {
 			return nil, err
 		}
-		// Just watching certain `deployment` and `group` which are the same with current client.
-		// It ignores other deployment and group applications.
+		// Watch certain service prefix.
 		r.etcdWatcher = newEtcdWatcher(
 			etcdClient,
 			gstr.Join([]string{
 				gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
 				gcmd.GetWithEnv(EnvKeyDeployment, DefaultDeployment).String(),
 				gcmd.GetWithEnv(EnvKeyGroup, DefaultGroup).String(),
+				target.Endpoint,
 			}, "/"),
 		)
 	}
 	r.waitGroup.Add(1)
 	go func() {
 		defer r.waitGroup.Done()
-		for addresses := range r.etcdWatcher.Watch(target.Endpoint) {
+		for addresses := range r.etcdWatcher.Watch() {
 			g.Log().Debugf(`AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
-			if len(addresses) > 0 {
-				clientConn.UpdateState(resolver.State{
-					Addresses: addresses,
-				})
-			}
+			//if len(addresses) > 0 {
+			clientConn.UpdateState(resolver.State{
+				Addresses: addresses,
+			})
+			//}
 		}
 	}()
 	return r, nil

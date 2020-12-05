@@ -5,43 +5,35 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/text/gstr"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"sync"
 	"time"
 )
 
-// etcdRegister is the interface Registry implements using ETCD.
-type etcdRegister struct {
+// etcdDiscovery is the interface Registry implements using ETCD.
+type etcdDiscovery struct {
 	sync.RWMutex
 	etcd3Client  *etcd3.Client
 	keepaliveTtl time.Duration
 	etcdGrantId  etcd3.LeaseID
-	services     []*Service
 }
 
 var (
-	// defaultRegistry is the default Registry object that used in package method for convenience.
-	defaultRegistry Registry
+	// defaultDiscovery is the default Registry object that used in package method for convenience.
+	defaultDiscovery Discovery
 )
 
-// initDefaultRegister lazily initializes the local register object.
-func initDefaultRegister() error {
-	if defaultRegistry != nil {
+// initDefaultDiscovery lazily initializes the local register object.
+func initDefaultDiscovery() error {
+	if defaultDiscovery != nil {
 		return nil
 	}
-	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
-	if len(endpoints) == 0 {
-		return gerror.New(`endpoints not found from environment or command-line`)
-	}
-	client, err := etcd3.New(etcd3.Config{
-		Endpoints: endpoints,
-	})
+	client, err := getEtcdClient()
 	if err != nil {
 		return err
 	}
-	defaultRegistry = &etcdRegister{
+	defaultDiscovery = &etcdDiscovery{
 		etcd3Client:  client,
 		keepaliveTtl: gcmd.GetWithEnv("", DefaultKeepAliveTtl).Duration(),
 	}
@@ -50,35 +42,35 @@ func initDefaultRegister() error {
 
 // Register registers `service` to ETCD.
 func Register(service *Service) error {
-	if err := initDefaultRegister(); err != nil {
+	if err := initDefaultDiscovery(); err != nil {
 		return err
 	}
-	return defaultRegistry.Register(service)
+	return defaultDiscovery.Register(service)
 }
 
 // Services returns all registered service list.
 func Services() []*Service {
-	return defaultRegistry.Services()
+	return defaultDiscovery.Services()
 }
 
 // Unregister removes `service` from ETCD.
 func Unregister(service *Service) error {
-	if err := initDefaultRegister(); err != nil {
+	if err := initDefaultDiscovery(); err != nil {
 		return err
 	}
-	return defaultRegistry.Unregister(service)
+	return defaultDiscovery.Unregister(service)
 }
 
 // Close closes the Registry for gracefully shutdown purpose.
 func Close() error {
-	if err := initDefaultRegister(); err != nil {
+	if err := initDefaultDiscovery(); err != nil {
 		return err
 	}
-	return defaultRegistry.Close()
+	return defaultDiscovery.Close()
 }
 
 // Register registers `service` to ETCD.
-func (r *etcdRegister) Register(service *Service) error {
+func (r *etcdDiscovery) Register(service *Service) error {
 	// Necessary.
 	if service.AppId == "" {
 		service.AppId = gcmd.GetWithEnv(EnvKeyAppId).String()
@@ -126,17 +118,16 @@ func (r *etcdRegister) Register(service *Service) error {
 	if err != nil {
 		return err
 	}
-	r.services = append(r.services, service)
 	go r.keepAlive(service, keepAliceCh)
 	return nil
 }
 
 // keepAlive continuously keeps alive the lease from ETCD.
-func (r *etcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
+func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
 	for {
 		select {
 		case <-r.etcd3Client.Ctx().Done():
-			g.Log().Debugf("keepalive done for grant id: %d", r.etcdGrantId)
+			g.Log().Debugf("keepalive done for lease id: %d", r.etcdGrantId)
 			return
 
 		case res, ok := <-keepAliceCh:
@@ -144,11 +135,7 @@ func (r *etcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 				g.Log().Debugf(`keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
-				g.Log().Debugf(`keepalive Unregister: %s`, r.etcdGrantId)
-				r.Unregister(service)
-				if err := r.Register(service); err != nil {
-					g.Log().Error(err)
-				}
+				g.Log().Debugf(`keepalive exit, lease id: %d`, r.etcdGrantId)
 				return
 			}
 		}
@@ -156,23 +143,18 @@ func (r *etcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 }
 
 // Services returns all registered service list.
-func (r *etcdRegister) Services() []*Service {
-	return r.services
+func (r *etcdDiscovery) Services() []*Service {
+	return nil
 }
 
 // Unregister removes `service` from ETCD.
-func (r *etcdRegister) Unregister(service *Service) error {
-	for i, s := range r.services {
-		if s.AppId == service.AppId {
-			r.services = append(r.services[:i], r.services[i+1:]...)
-			break
-		}
-	}
+func (r *etcdDiscovery) Unregister(service *Service) error {
+	g.Log().Debugf(`discovery.Unregister: %s`, service.AppId)
 	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantId)
 	return err
 }
 
 // Close closes the Registry for gracefully shutdown purpose.
-func (r *etcdRegister) Close() error {
+func (r *etcdDiscovery) Close() error {
 	return r.etcd3Client.Close()
 }

@@ -5,11 +5,16 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
 	"net"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
+	"time"
 )
 
 // GrpcServer is the server for GRPC protocol.
@@ -68,10 +73,10 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 }
 
 // Run starts the server in blocking way.
-func (s *GrpcServer) Run() error {
+func (s *GrpcServer) Run() {
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
-		return err
+		g.Log().Panic(err)
 	}
 	if len(s.services) == 0 {
 		appId := gcmd.GetWithEnv(discovery.EnvKeyAppId).String()
@@ -86,11 +91,47 @@ func (s *GrpcServer) Run() error {
 	// Register service list after server starts.
 	for _, service := range s.services {
 		if err = discovery.Register(service); err != nil {
-			return err
+			g.Log().Panic(err)
 		}
 	}
-	g.Log().Printf("grpc server start listening on: %s", s.config.Address)
-	return s.Server.Serve(listener)
+	// Start listening.
+	go func() {
+		if err := s.Server.Serve(listener); err != nil {
+			g.Log().Panic(err)
+		}
+	}()
+
+	g.Log().Printf("pid: %d grpc server start listening on: %s", gproc.Pid(), s.config.Address)
+
+	// Signal listening and handling for gracefully shutdown.
+	time.Sleep(time.Second)
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(
+		sigChan,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGKILL,
+		syscall.SIGTERM,
+		syscall.SIGABRT,
+	)
+	for {
+		switch <-sigChan {
+		case
+			syscall.SIGINT,
+			syscall.SIGQUIT,
+			syscall.SIGKILL,
+			syscall.SIGTERM,
+			syscall.SIGABRT:
+			for _, service := range s.services {
+				discovery.Unregister(service)
+			}
+			time.Sleep(time.Second)
+			s.Stop()
+			time.Sleep(time.Second)
+			return
+		default:
+		}
+	}
 }
 
 // Start starts the server in no-blocking way.
@@ -98,9 +139,7 @@ func (s *GrpcServer) Start() {
 	s.waitGroup.Add(1)
 	go func() {
 		defer s.waitGroup.Done()
-		if err := s.Run(); err != nil {
-			panic(err)
-		}
+		s.Run()
 	}()
 }
 
@@ -111,5 +150,6 @@ func (s *GrpcServer) Wait() {
 
 // Stop gracefully stops the server.
 func (s *GrpcServer) Stop() {
+	g.Log().Debug("gracefully shutting down")
 	s.Server.GracefulStop()
 }
