@@ -12,32 +12,81 @@ import (
 	"time"
 )
 
-type EtcdRegister struct {
+// etcdRegister is the interface Registry implements using ETCD.
+type etcdRegister struct {
 	sync.RWMutex
 	etcd3Client  *etcd3.Client
 	keepaliveTtl time.Duration
 	etcdGrantId  etcd3.LeaseID
 }
 
-func NewRegister() (Register, error) {
+var (
+	// defaultRegistry is the default Registry object that used in package method for convenience.
+	defaultRegistry Registry
+)
+
+// initDefaultRegister lazily initializes the local register object.
+func initDefaultRegister() error {
+	if defaultRegistry != nil {
+		return nil
+	}
 	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
 	if len(endpoints) == 0 {
-		return nil, gerror.New(`endpoints not found from environment or command-line`)
+		return gerror.New(`endpoints not found from environment or command-line`)
 	}
 	client, err := etcd3.New(etcd3.Config{
 		Endpoints: endpoints,
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	registry := &EtcdRegister{
+	defaultRegistry = &etcdRegister{
 		etcd3Client:  client,
 		keepaliveTtl: gcmd.GetWithEnv("", DefaultKeepAliveTtl).Duration(),
 	}
-	return registry, nil
+	return nil
 }
 
-func (r *EtcdRegister) Register(service *Service) error {
+// Register registers `service` to ETCD.
+func Register(service *Service) error {
+	if err := initDefaultRegister(); err != nil {
+		return err
+	}
+	return defaultRegistry.Register(service)
+}
+
+// Unregister removes `service` from ETCD.
+func Unregister(service *Service) error {
+	if err := initDefaultRegister(); err != nil {
+		return err
+	}
+	return defaultRegistry.Unregister(service)
+}
+
+// Close closes the Registry for gracefully shutdown purpose.
+func Close() error {
+	if err := initDefaultRegister(); err != nil {
+		return err
+	}
+	return defaultRegistry.Close()
+}
+
+// Register registers `service` to ETCD.
+func (r *etcdRegister) Register(service *Service) error {
+	// Necessary.
+	if service.AppId == "" {
+		service.AppId = gcmd.GetWithEnv(EnvKeyAppId).String()
+		if service.AppId == "" {
+			return gerror.New(`service app id cannot be empty`)
+		}
+	}
+	// Necessary.
+	if service.Address == "" {
+		service.Address = gcmd.GetWithEnv(EnvKeyAddress).String()
+		if service.Address == "" {
+			return gerror.Newf(`service address for "%s" cannot be empty`, service.AppId)
+		}
+	}
 	if service.Deployment == "" {
 		service.Deployment = gcmd.GetWithEnv(EnvKeyDeployment, DefaultDeployment).String()
 	}
@@ -75,7 +124,8 @@ func (r *EtcdRegister) Register(service *Service) error {
 	return nil
 }
 
-func (r *EtcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
+// keepAlive continuously keeps alive the lease from ETCD.
+func (r *etcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
 	for {
 		select {
 		case <-r.etcd3Client.Ctx().Done():
@@ -98,11 +148,13 @@ func (r *EtcdRegister) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Lea
 	}
 }
 
-func (r *EtcdRegister) Unregister(service *Service) error {
+// Unregister removes `service` from ETCD.
+func (r *etcdRegister) Unregister(service *Service) error {
 	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantId)
 	return err
 }
 
-func (r *EtcdRegister) Close() error {
+// Close closes the Registry for gracefully shutdown purpose.
+func (r *etcdRegister) Close() error {
 	return r.etcd3Client.Close()
 }

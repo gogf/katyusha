@@ -1,7 +1,10 @@
 package krpc
 
 import (
+	"fmt"
 	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/net/gipv4"
+	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
 	"net"
@@ -12,7 +15,7 @@ import (
 type GrpcServer struct {
 	Server    *grpc.Server
 	config    GrpcServerConfig
-	register  discovery.Register
+	services  []*discovery.Service
 	waitGroup sync.WaitGroup
 }
 
@@ -26,6 +29,12 @@ type GrpcServerOption = grpc.ServerOption
 
 // NewGrpcServer creates and returns a grpc server.
 func NewGrpcServer(config GrpcServerConfig, option ...GrpcServerOption) *GrpcServer {
+	if config.Addr == "" {
+		panic("server address cannot be empty")
+	}
+	if !gstr.Contains(config.Addr, ":") {
+		panic("invalid service address, should contain listening port")
+	}
 	server := &GrpcServer{
 		Server: grpc.NewServer(option...),
 		config: config,
@@ -33,11 +42,41 @@ func NewGrpcServer(config GrpcServerConfig, option ...GrpcServerOption) *GrpcSer
 	return server
 }
 
+// Service binds service list to current server.
+// Server will automatically register the service list after it starts.
+func (s *GrpcServer) Service(services ...*discovery.Service) {
+	var (
+		serviceAddress string
+		array          = gstr.Split(s.config.Addr, ":")
+	)
+	if array[0] == "0.0.0.0" || array[0] == "" {
+		intraIp, err := gipv4.GetIntranetIp()
+		if err != nil {
+			panic("retrieving intranet ip failed, please check your net card or manually assign the service address: " + err.Error())
+		}
+		serviceAddress = fmt.Sprintf(`%s:%s`, intraIp, array[1])
+	} else {
+		serviceAddress = s.config.Addr
+	}
+	for _, service := range services {
+		if service.Address == "" {
+			service.Address = serviceAddress
+		}
+	}
+	s.services = services
+}
+
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() error {
 	listener, err := net.Listen("tcp", s.config.Addr)
 	if err != nil {
 		return err
+	}
+	// Register service list after server starts.
+	for _, service := range s.services {
+		if err = discovery.Register(service); err != nil {
+			return err
+		}
 	}
 	g.Log().Printf("grpc server start listening on: %s", s.config.Addr)
 	return s.Server.Serve(listener)
@@ -48,7 +87,9 @@ func (s *GrpcServer) Start() {
 	s.waitGroup.Add(1)
 	go func() {
 		defer s.waitGroup.Done()
-		s.Run()
+		if err := s.Run(); err != nil {
+			panic(err)
+		}
 	}()
 }
 

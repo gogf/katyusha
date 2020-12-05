@@ -9,7 +9,6 @@ import (
 	"github.com/gogf/katyusha/examples/proto"
 	"github.com/gogf/katyusha/krpc"
 	"golang.org/x/net/context"
-	"log"
 )
 
 type serviceEcho struct{}
@@ -28,28 +27,16 @@ func main() {
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
 
-	register, err := discovery.NewRegister()
-	if err != nil {
-		log.Panic(err)
-		return
-	}
-
 	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
 		Addr: "0.0.0.0:" + gcmd.GetOpt("port"),
 	})
 	proto.RegisterEchoServer(s.Server, new(serviceEcho))
-	s.Start()
-
-	err = register.Register(&discovery.Service{
+	s.Service(&discovery.Service{
 		AppId:    "echo",
 		Version:  "v1.0",
-		Address:  "127.0.0.1:" + gcmd.GetOpt("port"),
 		Metadata: g.Map{"weight": 1},
 	})
-	if err != nil {
-		panic(err)
-	}
-	s.Wait()
+	s.Run()
 
 	//signalChan := make(chan os.Signal, 1)
 	//signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)

@@ -10,19 +10,19 @@ import (
 	"sync"
 )
 
-// defaultBuilder implements interface resolver.Builder.
-type defaultBuilder struct {
-	etcdWatcher *EtcdWatcher
+// etcdBuilder implements interface resolver.Builder.
+type etcdBuilder struct {
+	etcdWatcher *etcdWatcher
 	waitGroup   sync.WaitGroup // Used for gracefully close the builder.
 }
 
 func init() {
 	// It uses default builder handling the DNS for grpc service requests.
-	resolver.Register(&defaultBuilder{})
+	resolver.Register(&etcdBuilder{})
 }
 
 // Build implements interface google.golang.org/grpc/resolver.Builder.
-func (r *defaultBuilder) Build(target resolver.Target, clientConn resolver.ClientConn, options resolver.BuildOptions) (resolver.Resolver, error) {
+func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientConn, options resolver.BuildOptions) (resolver.Resolver, error) {
 	g.Log().Debug("Build", target, clientConn, options)
 	if target.Endpoint == "" {
 		return nil, gerror.New(`requested app id cannot be empty`)
@@ -39,9 +39,15 @@ func (r *defaultBuilder) Build(target resolver.Target, clientConn resolver.Clien
 		if err != nil {
 			return nil, err
 		}
+		// Just watching certain `deployment` and `group` which are the same with current client.
+		// It ignores other deployment and group applications.
 		r.etcdWatcher = newEtcdWatcher(
-			gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
 			etcdClient,
+			gstr.Join([]string{
+				gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
+				gcmd.GetWithEnv(EnvKeyDeployment, DefaultDeployment).String(),
+				gcmd.GetWithEnv(EnvKeyGroup, DefaultGroup).String(),
+			}, "/"),
 		)
 	}
 	r.waitGroup.Add(1)
@@ -60,17 +66,17 @@ func (r *defaultBuilder) Build(target resolver.Target, clientConn resolver.Clien
 }
 
 // Scheme implements interface google.golang.org/grpc/resolver.Builder.
-func (r *defaultBuilder) Scheme() string {
+func (r *etcdBuilder) Scheme() string {
 	return DefaultScheme
 }
 
 // ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.
-func (r *defaultBuilder) ResolveNow(o resolver.ResolveNowOptions) {
+func (r *etcdBuilder) ResolveNow(o resolver.ResolveNowOptions) {
 
 }
 
 // Close implements interface google.golang.org/grpc/resolver.Resolver.
-func (r *defaultBuilder) Close() {
+func (r *etcdBuilder) Close() {
 	r.etcdWatcher.Close()
 	r.waitGroup.Wait()
 }

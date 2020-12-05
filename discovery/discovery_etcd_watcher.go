@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-type EtcdWatcher struct {
+type etcdWatcher struct {
 	key        string             // Watched key prefix.
 	ctx        context.Context    // Context for request handling.
 	cancelFunc context.CancelFunc // Cancel function for this context.
@@ -21,9 +21,9 @@ type EtcdWatcher struct {
 	addressMap *gmap.StrAnyMap    // Service AppId to its address list mapping, type: map[string][]resolver.Address.
 }
 
-func newEtcdWatcher(key string, etcdClient *etcd3.Client) *EtcdWatcher {
+func newEtcdWatcher(etcdClient *etcd3.Client, key string) *etcdWatcher {
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	w := &EtcdWatcher{
+	w := &etcdWatcher{
 		key:        key,
 		ctx:        ctx,
 		cancelFunc: cancelFunc,
@@ -34,7 +34,7 @@ func newEtcdWatcher(key string, etcdClient *etcd3.Client) *EtcdWatcher {
 }
 
 // Watch keeps watching the registered prefix key events.
-func (w *EtcdWatcher) Watch(appId string) chan []resolver.Address {
+func (w *etcdWatcher) Watch(appId string) chan []resolver.Address {
 	w.initialize()
 	addressCh := make(chan []resolver.Address, 10)
 	w.waitGroup.Add(1)
@@ -88,7 +88,7 @@ func (w *EtcdWatcher) Watch(appId string) chan []resolver.Address {
 }
 
 // Initialize retrieves data from discovery server and initializes the address map.
-func (w *EtcdWatcher) initialize() {
+func (w *etcdWatcher) initialize() {
 	w.addressMap.LockFunc(func(m map[string]interface{}) {
 		if len(m) == 0 {
 			res, err := w.etcdClient.Get(w.ctx, w.key, etcd3.WithPrefix())
@@ -125,7 +125,7 @@ func extractServices(resp *etcd3.GetResponse) []*Service {
 	return services
 }
 
-func (w *EtcdWatcher) updateAddressesToCh(appId string, addressCh chan []resolver.Address) {
+func (w *etcdWatcher) updateAddressesToCh(appId string, addressCh chan []resolver.Address) {
 	clonedAddresses := make([]resolver.Address, 0)
 	w.addressMap.RLockFunc(func(m map[string]interface{}) {
 		if v := m[appId]; v == nil {
@@ -141,7 +141,7 @@ func (w *EtcdWatcher) updateAddressesToCh(appId string, addressCh chan []resolve
 	}
 }
 
-func (w *EtcdWatcher) addAddress(appId string, address resolver.Address) bool {
+func (w *etcdWatcher) addAddress(appId string, address resolver.Address) bool {
 	w.addressMap.LockFunc(func(m map[string]interface{}) {
 		if _, ok := m[appId]; !ok {
 			m[appId] = make([]resolver.Address, 0)
@@ -157,7 +157,7 @@ func (w *EtcdWatcher) addAddress(appId string, address resolver.Address) bool {
 	return true
 }
 
-func (w *EtcdWatcher) removeAddress(appId string, address resolver.Address) bool {
+func (w *etcdWatcher) removeAddress(appId string, address resolver.Address) bool {
 	w.addressMap.LockFunc(func(m map[string]interface{}) {
 		if _, ok := m[appId]; !ok {
 			m[appId] = make([]resolver.Address, 0)
@@ -175,6 +175,6 @@ func (w *EtcdWatcher) removeAddress(appId string, address resolver.Address) bool
 	return false
 }
 
-func (w *EtcdWatcher) Close() {
+func (w *etcdWatcher) Close() {
 	w.cancelFunc()
 }

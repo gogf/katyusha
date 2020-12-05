@@ -10,7 +10,6 @@ import (
 	"github.com/gogf/katyusha/examples/proto"
 	"github.com/gogf/katyusha/krpc"
 	"golang.org/x/net/context"
-	"log"
 )
 
 type serviceTime struct{}
@@ -28,20 +27,14 @@ func main() {
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
 
-	register, err := discovery.NewRegister()
-	if err != nil {
-		log.Panic(err)
-		return
-	}
-
 	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
 		Addr: "0.0.0.0:" + gcmd.GetOpt("port"),
 	})
 	proto.RegisterTimeServer(s.Server, new(serviceTime))
 	s.Start()
 
-	err = register.Register(&discovery.Service{
-		AppId:    "time",
+	err := discovery.Register(&discovery.Service{
+		AppId:    "echo",
 		Version:  "v1.0",
 		Address:  "127.0.0.1:" + gcmd.GetOpt("port"),
 		Metadata: g.Map{"weight": 1},
@@ -49,6 +42,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	s.Wait()
 
 	//signalChan := make(chan os.Signal, 1)
