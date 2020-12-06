@@ -48,11 +48,14 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 		defer r.waitGroup.Done()
 		for addresses := range r.etcdWatcher.Watch() {
 			g.Log().Debugf(`AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
-			//if len(addresses) > 0 {
-			clientConn.UpdateState(resolver.State{
-				Addresses: addresses,
-			})
-			//}
+			if len(addresses) > 0 {
+				clientConn.UpdateState(resolver.State{
+					Addresses: addresses,
+				})
+			} else {
+				// Service addresses empty, that means service shuts down or unavailable temporarily.
+				clientConn.ReportError(gerror.New("Service unavailable: service shuts down or unavailable temporarily"))
+			}
 		}
 	}()
 	return r, nil
@@ -64,8 +67,8 @@ func (r *etcdBuilder) Scheme() string {
 }
 
 // ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.
-func (r *etcdBuilder) ResolveNow(o resolver.ResolveNowOptions) {
-
+func (r *etcdBuilder) ResolveNow(opts resolver.ResolveNowOptions) {
+	//g.Log().Debug("ResolveNow:", opts)
 }
 
 // Close implements interface google.golang.org/grpc/resolver.Resolver.

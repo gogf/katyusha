@@ -29,7 +29,7 @@ func main() {
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
 	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
-		Address: "0.0.0.0:" + gcmd.GetOpt("port"),
+		Address: fmt.Sprintf("0.0.0.0:%s", gcmd.GetOpt("port")),
 	})
 	proto.RegisterTimeServer(s.Server, new(serviceTime))
 	s.Run()

@@ -103,21 +103,22 @@ func (r *etcdDiscovery) Register(service *Service) error {
 		serviceRegisterKey = service.RegisterKey()
 	)
 
-	g.Log().Debugf(`register key: %s`, serviceRegisterKey)
+	//g.Log().Debugf(`register key: %s`, serviceRegisterKey)
 	resp, err := r.etcd3Client.Grant(context.Background(), int64(r.keepaliveTtl/time.Second))
 	if err != nil {
 		return err
 	}
-	g.Log().Debugf(`registered: %d, %s`, resp.ID, metadataMarshalStr)
+	//g.Log().Debugf(`registered: %d, %s`, resp.ID, metadataMarshalStr)
 	r.etcdGrantId = resp.ID
 	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
 		return err
 	}
-	g.Log().Debugf(`request keepalive for grant id: %d`, resp.ID)
+	//g.Log().Debugf(`request keepalive for grant id: %d`, resp.ID)
 	keepAliceCh, err := r.etcd3Client.KeepAlive(context.Background(), resp.ID)
 	if err != nil {
 		return err
 	}
+	g.Log().Printf(`service registered: %+v`, service)
 	go r.keepAlive(service, keepAliceCh)
 	return nil
 }
@@ -132,10 +133,10 @@ func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Le
 
 		case res, ok := <-keepAliceCh:
 			if res != nil {
-				g.Log().Debugf(`keepalive loop: %v, %s`, ok, res.String())
+				//g.Log().Debugf(`keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
-				g.Log().Debugf(`keepalive exit, lease id: %d`, r.etcdGrantId)
+				//g.Log().Debugf(`keepalive exit, lease id: %d`, r.etcdGrantId)
 				return
 			}
 		}

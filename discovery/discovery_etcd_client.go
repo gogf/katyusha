@@ -8,9 +8,12 @@ import (
 )
 
 var (
+	// etcdClient is the client instance for etcd.
 	etcdClient *etcd3.Client
 )
 
+// getEtcdClient creates and returns an instance for etcd client.
+// It returns the same instance object if it is already created one.
 func getEtcdClient() (*etcd3.Client, error) {
 	if etcdClient != nil {
 		return etcdClient, nil

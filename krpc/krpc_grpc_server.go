@@ -88,12 +88,6 @@ func (s *GrpcServer) Run() {
 			})
 		}
 	}
-	// Register service list after server starts.
-	for _, service := range s.services {
-		if err = discovery.Register(service); err != nil {
-			g.Log().Panic(err)
-		}
-	}
 	// Start listening.
 	go func() {
 		if err := s.Server.Serve(listener); err != nil {
@@ -101,10 +95,16 @@ func (s *GrpcServer) Run() {
 		}
 	}()
 
-	g.Log().Printf("pid: %d grpc server start listening on: %s", gproc.Pid(), s.config.Address)
+	// Register service list after server starts.
+	for _, service := range s.services {
+		if err = discovery.Register(service); err != nil {
+			g.Log().Panic(err)
+		}
+	}
+
+	g.Log().Printf("grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
 
 	// Signal listening and handling for gracefully shutdown.
-	time.Sleep(time.Second)
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(
 		sigChan,

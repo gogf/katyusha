@@ -1,18 +1,23 @@
 package balancer
 
 import (
+	"github.com/gogf/gf/container/gtype"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
-	"google.golang.org/grpc/grpclog"
-	"math/rand"
-	"sync"
-	"sync/atomic"
-	"time"
 )
+
+const BlLeastConnection = "katyusha_balancer_least_connection"
 
 type leastConnectionPickerBuilder struct{}
 
-const LeastConnection = "least_connection_x"
+type leastConnectionPicker struct {
+	nodes []*leastConnectionPickerNode
+}
+
+type leastConnectionPickerNode struct {
+	balancer.SubConn
+	inflight *gtype.Int
+}
 
 func init() {
 	balancer.Register(newLeastConnectionBuilder())
@@ -20,66 +25,50 @@ func init() {
 
 // newLeastConnectionBuilder creates a new leastConnection balancer builder.
 func newLeastConnectionBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(LeastConnection, &leastConnectionPickerBuilder{}, base.Config{HealthCheck: true})
+	return base.NewBalancerBuilderV2(
+		BlLeastConnection,
+		&leastConnectionPickerBuilder{},
+		base.Config{HealthCheck: true},
+	)
 }
 
 func (*leastConnectionPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Picker {
-	grpclog.Infof("leastConnectionPicker: newPicker called with buildInfo: %v", buildInfo)
-
 	if len(buildInfo.ReadySCs) == 0 {
 		return base.NewErrPickerV2(balancer.ErrNoSubConnAvailable)
 	}
-
-	var nodes []*Node
+	var nodes []*leastConnectionPickerNode
 	for subConn, _ := range buildInfo.ReadySCs {
-		nodes = append(nodes, &Node{subConn, 0})
+		nodes = append(nodes, &leastConnectionPickerNode{
+			SubConn:  subConn,
+			inflight: gtype.NewInt(),
+		})
 	}
-
 	return &leastConnectionPicker{
 		nodes: nodes,
-		rand:  rand.New(rand.NewSource(time.Now().Unix())),
 	}
-}
-
-type Node struct {
-	balancer.SubConn
-	inflight int64
-}
-
-type leastConnectionPicker struct {
-	nodes []*Node
-	mu    sync.Mutex
-	rand  *rand.Rand
 }
 
 func (p *leastConnectionPicker) Pick(info balancer.PickInfo) (balancer.PickResult, error) {
-	ret := balancer.PickResult{}
+	result := balancer.PickResult{}
 	if len(p.nodes) == 0 {
-		return ret, balancer.ErrNoSubConnAvailable
+		return result, balancer.ErrNoSubConnAvailable
 	}
-	var node *Node
+	var pickedNode *leastConnectionPickerNode
 	if len(p.nodes) == 1 {
-		node = p.nodes[0]
+		pickedNode = p.nodes[0]
 	} else {
-		p.mu.Lock()
-		a := p.rand.Intn(len(p.nodes))
-		b := p.rand.Intn(len(p.nodes))
-		p.mu.Unlock()
-		if a == b {
-			b = (b + 1) % len(p.nodes)
-		}
-		if p.nodes[a].inflight < p.nodes[b].inflight {
-			node = p.nodes[a]
-		} else {
-			node = p.nodes[b]
+		for _, node := range p.nodes {
+			if pickedNode == nil {
+				pickedNode = node
+			} else if node.inflight.Val() < pickedNode.inflight.Val() {
+				pickedNode = node
+			}
 		}
 	}
-	atomic.AddInt64(&node.inflight, 1)
-
-	ret.SubConn = node
-	ret.Done = func(info balancer.DoneInfo) {
-		atomic.AddInt64(&node.inflight, -1)
+	pickedNode.inflight.Add(1)
+	result.SubConn = pickedNode
+	result.Done = func(info balancer.DoneInfo) {
+		pickedNode.inflight.Add(-1)
 	}
-
-	return ret, nil
+	return result, nil
 }

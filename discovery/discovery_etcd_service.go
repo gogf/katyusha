@@ -45,7 +45,10 @@ func newServiceFromKeyValue(key, value []byte) *Service {
 		Metadata:   make(g.Map),
 	}
 	if len(value) > 0 {
-		json.Unmarshal(value, &service.Metadata)
+		err := json.Unmarshal(value, &service.Metadata)
+		if err != nil {
+			g.Log().Error(err)
+		}
 	}
 	return service
 }
