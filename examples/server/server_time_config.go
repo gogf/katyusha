@@ -5,19 +5,11 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/os/gtime"
 	"github.com/gogf/katyusha/discovery"
-	"github.com/gogf/katyusha/examples/proto"
+	"github.com/gogf/katyusha/examples/protocol"
+	"github.com/gogf/katyusha/examples/service"
 	"github.com/gogf/katyusha/krpc"
-	"golang.org/x/net/context"
 )
-
-type serviceTime struct{}
-
-func (s *serviceTime) Now(ctx context.Context, r *proto.NowReq) (*proto.NowRes, error) {
-	text := fmt.Sprintf(`%s: %s`, gcmd.GetOpt("node"), gtime.Now().String())
-	return &proto.NowRes{Time: text}, nil
-}
 
 // go run server_time.go -node node1 -port 8100
 // go run server_time.go -node node2 -port 8101
@@ -28,9 +20,13 @@ func main() {
 		discovery.EnvKeyMetaData:  `{"weight":100}`,
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
-	s := krpc.NewGrpcServer(krpc.GrpcServerConfig{
-		Address: fmt.Sprintf("0.0.0.0:%s", gcmd.GetOpt("port")),
-	})
-	proto.RegisterTimeServer(s.Server, new(serviceTime))
+	c := &krpc.GrpcServerConfig{
+		Address:          fmt.Sprintf("0.0.0.0:%s", gcmd.GetOpt("port")),
+		LogStdout:        true,
+		ErrorLogEnabled:  true,
+		AccessLogEnabled: true,
+	}
+	s := krpc.NewGrpcServer(c)
+	protocol.RegisterTimeServer(s.Server, new(service.Time))
 	s.Run()
 }

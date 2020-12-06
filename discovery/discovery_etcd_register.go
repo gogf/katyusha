@@ -150,7 +150,7 @@ func (r *etcdDiscovery) Services() []*Service {
 
 // Unregister removes `service` from ETCD.
 func (r *etcdDiscovery) Unregister(service *Service) error {
-	g.Log().Debugf(`discovery.Unregister: %s`, service.AppId)
+	//g.Log().Debugf(`discovery.Unregister: %s`, service.AppId)
 	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantId)
 	return err
 }

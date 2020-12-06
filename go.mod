@@ -5,6 +5,7 @@ go 1.11
 require (
 	github.com/gogf/gf v1.14.6-0.20201204160603-2f741d3b240a
 	github.com/golang/protobuf v1.4.3
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	go.etcd.io/etcd/api/v3 v3.5.0-pre
 	go.etcd.io/etcd/client/v3 v3.0.0-20201118182908-c11ddc65cea1
 	go.uber.org/multierr v1.6.0 // indirect

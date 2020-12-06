@@ -6,7 +6,7 @@
 // 	protoc        v3.11.4
 // source: echo.proto
 
-package proto
+package protocol
 
 import (
 	context "context"

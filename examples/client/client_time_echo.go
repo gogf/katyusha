@@ -4,7 +4,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/katyusha/discovery"
-	"github.com/gogf/katyusha/examples/proto"
+	"github.com/gogf/katyusha/examples/protocol"
 	"github.com/gogf/katyusha/krpc"
 	"golang.org/x/net/context"
 	"time"
@@ -22,9 +22,9 @@ func main() {
 		}
 		defer conn.Close()
 
-		echoClient := proto.NewEchoClient(conn)
+		echoClient := protocol.NewEchoClient(conn)
 		for i := 0; i < 500; i++ {
-			res, err := echoClient.Say(context.Background(), &proto.SayReq{Content: "Hello"})
+			res, err := echoClient.Say(context.Background(), &protocol.SayReq{Content: "Hello"})
 			if err != nil {
 				g.Log().Error(err)
 				time.Sleep(time.Second)
@@ -41,10 +41,10 @@ func main() {
 		panic(err)
 	}
 	defer conn.Close()
-	client := proto.NewTimeClient(conn)
+	client := protocol.NewTimeClient(conn)
 
 	for i := 0; i < 500; i++ {
-		res, err := client.Now(context.Background(), &proto.NowReq{})
+		res, err := client.Now(context.Background(), &protocol.NowReq{})
 		if err != nil {
 			g.Log().Error(err)
 			time.Sleep(time.Second)

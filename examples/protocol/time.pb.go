@@ -6,7 +6,7 @@
 // 	protoc        v3.11.4
 // source: time.proto
 
-package proto
+package protocol
 
 import (
 	context "context"

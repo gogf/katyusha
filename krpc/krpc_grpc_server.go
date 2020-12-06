@@ -2,9 +2,9 @@ package krpc
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/katyusha/discovery"
@@ -20,32 +20,41 @@ import (
 // GrpcServer is the server for GRPC protocol.
 type GrpcServer struct {
 	Server    *grpc.Server
-	config    GrpcServerConfig
+	Logger    *glog.Logger
+	config    *GrpcServerConfig
 	services  []*discovery.Service
 	waitGroup sync.WaitGroup
 }
 
-// GrpcServerConfig is the configuration for server.
-type GrpcServerConfig struct {
-	Address string // Address for server listening.
-}
-
-// GrpcServerOption is alias for grpc.ServerOption.
-type GrpcServerOption = grpc.ServerOption
-
 // NewGrpcServer creates and returns a grpc server.
-func NewGrpcServer(config GrpcServerConfig, option ...GrpcServerOption) *GrpcServer {
+func NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
+	var config *GrpcServerConfig
+	if len(conf) > 0 {
+		config = conf[0]
+	} else {
+		config = NewGrpcServerConfig()
+	}
 	if config.Address == "" {
 		panic("server address cannot be empty")
 	}
 	if !gstr.Contains(config.Address, ":") {
 		panic("invalid service address, should contain listening port")
 	}
-	server := &GrpcServer{
-		Server: grpc.NewServer(option...),
+	if config.Logger == nil {
+		config.Logger = glog.New()
+	}
+	s := &GrpcServer{
+		Logger: config.Logger,
 		config: config,
 	}
-	return server
+	s.config.Options = append([]grpc.ServerOption{
+		ChainUnaryServer(
+			s.UnaryLogger,
+			s.UnaryRecover,
+		),
+	}, s.config.Options...)
+	s.Server = grpc.NewServer(s.config.Options...)
+	return s
 }
 
 // Service binds service list to current server.
@@ -58,7 +67,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIp, err := gipv4.GetIntranetIp()
 		if err != nil {
-			panic("retrieving intranet ip failed, please check your net card or manually assign the service address: " + err.Error())
+			s.Logger.Panic("retrieving intranet ip failed, please check your net card or manually assign the service address: " + err.Error())
 		}
 		serviceAddress = fmt.Sprintf(`%s:%s`, intraIp, array[1])
 	} else {
@@ -76,7 +85,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 func (s *GrpcServer) Run() {
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
-		g.Log().Panic(err)
+		s.Logger.Panic(err)
 	}
 	if len(s.services) == 0 {
 		appId := gcmd.GetWithEnv(discovery.EnvKeyAppId).String()
@@ -91,18 +100,18 @@ func (s *GrpcServer) Run() {
 	// Start listening.
 	go func() {
 		if err := s.Server.Serve(listener); err != nil {
-			g.Log().Panic(err)
+			s.Logger.Panic(err)
 		}
 	}()
 
 	// Register service list after server starts.
 	for _, service := range s.services {
 		if err = discovery.Register(service); err != nil {
-			g.Log().Panic(err)
+			s.Logger.Panic(err)
 		}
 	}
 
-	g.Log().Printf("grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
+	s.Logger.Printf("grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
 
 	// Signal listening and handling for gracefully shutdown.
 	sigChan := make(chan os.Signal, 1)
@@ -122,6 +131,7 @@ func (s *GrpcServer) Run() {
 			syscall.SIGKILL,
 			syscall.SIGTERM,
 			syscall.SIGABRT:
+			s.Logger.Print("gracefully shutting down")
 			for _, service := range s.services {
 				discovery.Unregister(service)
 			}
@@ -150,6 +160,5 @@ func (s *GrpcServer) Wait() {
 
 // Stop gracefully stops the server.
 func (s *GrpcServer) Stop() {
-	g.Log().Debug("gracefully shutting down")
 	s.Server.GracefulStop()
 }
