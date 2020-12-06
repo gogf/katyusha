@@ -24,6 +24,12 @@ var (
 	defaultDiscovery Discovery
 )
 
+// SetDefaultDiscovery sets the default Discovery implements as your own implemented interface.
+// This configuration function should be called before using function `Register`.
+func SetDefaultDiscovery(discovery Discovery) {
+	defaultDiscovery = discovery
+}
+
 // initDefaultDiscovery lazily initializes the local register object.
 func initDefaultDiscovery() error {
 	if defaultDiscovery != nil {
@@ -35,7 +41,7 @@ func initDefaultDiscovery() error {
 	}
 	defaultDiscovery = &etcdDiscovery{
 		etcd3Client:  client,
-		keepaliveTtl: gcmd.GetWithEnv("", DefaultKeepAliveTtl).Duration(),
+		keepaliveTtl: gcmd.GetWithEnv(EnvKeyKeepAlive, DefaultKeepAliveTtl).Duration(),
 	}
 	return nil
 }
