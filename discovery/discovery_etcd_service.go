@@ -10,7 +10,7 @@ import (
 // Service definition.
 type Service struct {
 	AppId      string // (necessary) Unique id for the service, only for service discovery.
-	Address    string // (necessary) Service address, usually IP:port.
+	Address    string // (necessary) Service address, single one, usually IP:port, eg: 192.168.1.2:8000
 	Deployment string // (optional)  Service deployment name, eg: dev, qa, staging, prod, etc.
 	Group      string // (optional)  Service group, to indicate different service in the same environment with the same Name and AppId.
 	Version    string // (optional)  Service version, eg: v1.0.0, v2.1.1, etc.
