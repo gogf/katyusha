@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// UnaryLogger is the default unary interpreter for logging purpose.
+// UnaryLogger is the default unary interceptor for logging purpose.
 func (s *GrpcServer) UnaryLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	var (
 		start    = time.Now()
