@@ -6,10 +6,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-type GrpcClientConn struct {
-	*grpc.ClientConn
-}
-
 var (
 	// DefaultGrpcClientConnOptions is the default options for creating grpc client connection.
 	DefaultGrpcClientConnOptions = []grpc.DialOption{
@@ -19,7 +15,7 @@ var (
 )
 
 // NewGrpcClientConn creates and returns a client connection for given service `appId`.
-func NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*GrpcClientConn, error) {
+func NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	grpcClientOptions := opts
 	if len(grpcClientOptions) == 0 {
 		grpcClientOptions = DefaultGrpcClientConnOptions
@@ -28,5 +24,5 @@ func NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*GrpcClientConn, 
 	if err != nil {
 		return nil, err
 	}
-	return &GrpcClientConn{ClientConn: conn}, nil
+	return conn, nil
 }
