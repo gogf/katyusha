@@ -67,7 +67,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIp, err := gipv4.GetIntranetIp()
 		if err != nil {
-			s.Logger.Panic("retrieving intranet ip failed, please check your net card or manually assign the service address: " + err.Error())
+			s.Logger.Fatal("retrieving intranet ip failed, please check your net card or manually assign the service address: " + err.Error())
 		}
 		serviceAddress = fmt.Sprintf(`%s:%s`, intraIp, array[1])
 	} else {
@@ -85,7 +85,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 func (s *GrpcServer) Run() {
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
-		s.Logger.Panic(err)
+		s.Logger.Fatal(err)
 	}
 	if len(s.services) == 0 {
 		appId := gcmd.GetWithEnv(discovery.EnvKeyAppId).String()
@@ -100,14 +100,14 @@ func (s *GrpcServer) Run() {
 	// Start listening.
 	go func() {
 		if err := s.Server.Serve(listener); err != nil {
-			s.Logger.Panic(err)
+			s.Logger.Fatal(err)
 		}
 	}()
 
 	// Register service list after server starts.
 	for _, service := range s.services {
 		if err = discovery.Register(service); err != nil {
-			s.Logger.Panic(err)
+			s.Logger.Fatal(err)
 		}
 	}
 
