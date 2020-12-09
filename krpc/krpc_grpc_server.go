@@ -136,8 +136,8 @@ func (s *GrpcServer) Run() {
 			for _, service := range s.services {
 				discovery.Unregister(service)
 			}
-			s.Stop()
 			time.Sleep(time.Second)
+			s.Stop()
 			return
 		default:
 		}
