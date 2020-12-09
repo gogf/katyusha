@@ -26,7 +26,7 @@ func main() {
 		ErrorLogEnabled:  true,
 		AccessLogEnabled: true,
 	}
-	s := krpc.NewGrpcServer(c)
+	s := krpc.Server.NewGrpcServer(c)
 	protocol.RegisterEchoServer(s.Server, new(service.Echo))
 	s.Run()
 }

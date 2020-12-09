@@ -16,7 +16,7 @@ func main() {
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
 
-	conn, err := krpc.NewGrpcClientConn("echo")
+	conn, err := krpc.Client.NewGrpcClientConn("echo")
 	if err != nil {
 		panic(err)
 	}

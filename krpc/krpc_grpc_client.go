@@ -14,8 +14,8 @@ var (
 	}
 )
 
-// NewGrpcClientConn creates and returns a client connection for given service `appId`.
-func NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+// NewGrpcConn creates and returns a client connection for given service `appId`.
+func (c *krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	grpcClientOptions := opts
 	if len(grpcClientOptions) == 0 {
 		grpcClientOptions = DefaultGrpcClientConnOptions

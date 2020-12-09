@@ -16,7 +16,7 @@ func main() {
 	})
 
 	go func() {
-		conn, err := krpc.NewGrpcClientConn("echo")
+		conn, err := krpc.Client.NewGrpcClientConn("echo")
 		if err != nil {
 			panic(err)
 		}
@@ -36,7 +36,7 @@ func main() {
 	}()
 	time.Sleep(5 * time.Second)
 
-	conn, err := krpc.NewGrpcClientConn("time")
+	conn, err := krpc.Client.NewGrpcClientConn("time")
 	if err != nil {
 		panic(err)
 	}

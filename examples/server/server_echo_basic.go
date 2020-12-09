@@ -15,7 +15,7 @@ func main() {
 		discovery.EnvKeyMetaData:  `{"weight":100}`,
 		discovery.EnvKeyEndpoints: "127.0.0.1:2379",
 	})
-	s := krpc.NewGrpcServer()
+	s := krpc.Server.NewGrpcServer()
 	protocol.RegisterEchoServer(s.Server, new(service.Echo))
 	s.Run()
 }

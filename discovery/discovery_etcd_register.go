@@ -24,9 +24,9 @@ var (
 	defaultDiscovery Discovery
 )
 
-// SetDefaultDiscovery sets the default Discovery implements as your own implemented interface.
+// SetDiscovery sets the default Discovery implements as your own implemented interface.
 // This configuration function should be called before using function `Register`.
-func SetDefaultDiscovery(discovery Discovery) {
+func SetDiscovery(discovery Discovery) {
 	defaultDiscovery = discovery
 }
 

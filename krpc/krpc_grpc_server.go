@@ -27,12 +27,12 @@ type GrpcServer struct {
 }
 
 // NewGrpcServer creates and returns a grpc server.
-func NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
+func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	var config *GrpcServerConfig
 	if len(conf) > 0 {
 		config = conf[0]
 	} else {
-		config = NewGrpcServerConfig()
+		config = s.NewGrpcServerConfig()
 	}
 	if config.Address == "" {
 		panic("server address cannot be empty")
@@ -43,18 +43,18 @@ func NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	if config.Logger == nil {
 		config.Logger = glog.New()
 	}
-	s := &GrpcServer{
+	server := &GrpcServer{
 		Logger: config.Logger,
 		config: config,
 	}
-	s.config.Options = append([]grpc.ServerOption{
-		ChainUnaryServer(
-			s.UnaryLogger,
-			s.UnaryRecover,
+	server.config.Options = append([]grpc.ServerOption{
+		s.ChainUnary(
+			server.UnaryLogger,
+			server.UnaryRecover,
 		),
-	}, s.config.Options...)
-	s.Server = grpc.NewServer(s.config.Options...)
-	return s
+	}, server.config.Options...)
+	server.Server = grpc.NewServer(server.config.Options...)
+	return server
 }
 
 // Service binds service list to current server.
