@@ -18,7 +18,7 @@ func main() {
 
 	conn, err := krpc.Client.NewGrpcClientConn("echo")
 	if err != nil {
-		panic(err)
+		g.Log().Fatal(err)
 	}
 	defer conn.Close()
 

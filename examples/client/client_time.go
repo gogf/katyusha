@@ -17,7 +17,7 @@ func main() {
 
 	conn, err := krpc.Client.NewGrpcClientConn("time")
 	if err != nil {
-		panic(err)
+		g.Log().Fatal(err)
 	}
 	defer conn.Close()
 	client := protocol.NewTimeClient(conn)

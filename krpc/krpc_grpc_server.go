@@ -2,6 +2,7 @@ package krpc
 
 import (
 	"fmt"
+	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/glog"
@@ -35,10 +36,10 @@ func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config = s.NewGrpcServerConfig()
 	}
 	if config.Address == "" {
-		panic("server address cannot be empty")
+		g.Log().Fatal("server address cannot be empty")
 	}
 	if !gstr.Contains(config.Address, ":") {
-		panic("invalid service address, should contain listening port")
+		g.Log().Fatal("invalid service address, should contain listening port")
 	}
 	if config.Logger == nil {
 		config.Logger = glog.New()
@@ -135,7 +136,6 @@ func (s *GrpcServer) Run() {
 			for _, service := range s.services {
 				discovery.Unregister(service)
 			}
-			time.Sleep(time.Second)
 			s.Stop()
 			time.Sleep(time.Second)
 			return
