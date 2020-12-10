@@ -50,8 +50,8 @@ func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	}
 	server.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			server.UnaryError,
 			server.UnaryLogger,
+			server.UnaryError,
 			server.UnaryRecover,
 		),
 	}, server.config.Options...)

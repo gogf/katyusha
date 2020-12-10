@@ -3,6 +3,7 @@ package krpc
 import (
 	"context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
@@ -16,8 +17,8 @@ func (s *GrpcServer) UnaryLogger(ctx context.Context, req interface{}, info *grp
 	if err != nil {
 		if s.config.ErrorLogEnabled {
 			s.Logger.Ctx(ctx).Stack(false).Stdout(s.config.LogStdout).File(s.config.ErrorLogPattern).Errorf(
-				"%s, %.3fms, %+v, %+v, %+v",
-				info.FullMethod, float64(duration)/1e6, req, res, err,
+				"%s, %.3fms, %+v, %+v, %d, %+v",
+				info.FullMethod, float64(duration)/1e6, req, res, status.Code(err), err,
 			)
 		}
 	} else {
