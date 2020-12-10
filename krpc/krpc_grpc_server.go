@@ -50,6 +50,7 @@ func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	}
 	server.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
+			server.UnaryError,
 			server.UnaryLogger,
 			server.UnaryRecover,
 		),
@@ -161,4 +162,20 @@ func (s *GrpcServer) Wait() {
 // Stop gracefully stops the server.
 func (s *GrpcServer) Stop() {
 	s.Server.GracefulStop()
+}
+
+// ChainUnary returns a ServerOption that specifies the chained interceptor
+// for unary RPCs. The first interceptor will be the outer most,
+// while the last interceptor will be the inner most wrapper around the real call.
+// All unary interceptors added by this method will be chained.
+func (s *krpcServer) ChainUnary(interceptors ...grpc.UnaryServerInterceptor) grpc.ServerOption {
+	return grpc.ChainUnaryInterceptor(interceptors...)
+}
+
+// ChainStream returns a ServerOption that specifies the chained interceptor
+// for stream RPCs. The first interceptor will be the outer most,
+// while the last interceptor will be the inner most wrapper around the real call.
+// All stream interceptors added by this method will be chained.
+func (s *krpcServer) ChainStream(interceptors ...grpc.StreamServerInterceptor) grpc.ServerOption {
+	return grpc.ChainStreamInterceptor(interceptors...)
 }
