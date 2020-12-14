@@ -1,4 +1,4 @@
-package metrix
+package metrics
 
 import (
 	"runtime"
@@ -57,9 +57,9 @@ var (
 // Capture new values for the Go runtime statistics exported in
 // runtime.MemStats.  This is designed to be called as a goroutine.
 func CaptureRuntimeMemStats(r Registry, d time.Duration) {
-	for _ = range time.Tick(d) {
+	tw.Add(d, func() {
 		CaptureRuntimeMemStatsOnce(r)
-	}
+	})
 }
 
 // Capture new values for the Go runtime statistics exported in

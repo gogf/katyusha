@@ -1,4 +1,4 @@
-package metrix
+package metrics
 
 import (
 	"github.com/gogf/gf/frame/g"
@@ -21,9 +21,9 @@ func LogOnCue(r Registry, ch chan interface{}) {
 func LogScaled(r Registry, freq time.Duration, scale time.Duration) {
 	ch := make(chan interface{})
 	go func(channel chan interface{}) {
-		for _ = range time.Tick(freq) {
+		tw.Add(freq, func() {
 			channel <- struct{}{}
-		}
+		})
 	}(ch)
 	LogScaledOnCue(r, ch, scale)
 }

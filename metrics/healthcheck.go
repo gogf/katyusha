@@ -1,4 +1,4 @@
-package metrix
+package metrics
 
 // Healthchecks hold an error value describing an arbitrary up/down status.
 type IHealthcheck interface {

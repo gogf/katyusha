@@ -1,4 +1,4 @@
-package metrix
+package metrics
 
 import (
 	"math"

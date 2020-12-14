@@ -1,4 +1,4 @@
-package metrix
+package metrics
 
 import (
 	"bufio"
@@ -39,11 +39,11 @@ func Graphite(r Registry, d time.Duration, prefix string, addr *net.TCPAddr) {
 // but it takes a GraphiteConfig instead.
 func GraphiteWithConfig(c GraphiteConfig) {
 	log.Printf("WARNING: This go-metrics client has been DEPRECATED! It has been moved to https://github.com/cyberdelia/go-metrics-graphite and will be removed from rcrowley/go-metrics on August 12th 2015")
-	for _ = range time.Tick(c.FlushInterval) {
+	tw.Add(c.FlushInterval, func() {
 		if err := graphite(&c); nil != err {
 			log.Println(err)
 		}
-	}
+	})
 }
 
 // GraphiteOnce performs a single submission to Graphite, returning a

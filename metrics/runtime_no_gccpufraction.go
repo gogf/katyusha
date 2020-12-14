@@ -1,6 +1,6 @@
 // +build !go1.5
 
-package metrix
+package metrics
 
 import "runtime"
 

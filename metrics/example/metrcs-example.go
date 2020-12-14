@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"github.com/gogf/katyusha/metrix"
+	"github.com/gogf/katyusha/metrics"
 	"math/rand"
 	"time"
 )
@@ -10,60 +10,60 @@ import (
 const fanout = 10
 
 func main() {
-	r := metrix.NewRegistry()
+	r := metrics.NewRegistry()
 
-	c := metrix.NewCounter()
+	c := metrics.NewCounter()
 	r.Register("foo", c)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
 				c.Dec(19)
-				time.Sleep(300e6)
+				time.Sleep(time.Millisecond * 500)
 			}
 		}()
 		go func() {
 			for {
 				c.Inc(47)
-				time.Sleep(400e6)
+				time.Sleep(time.Millisecond * 400)
 			}
 		}()
 	}
 
-	g := metrix.NewGauge()
+	g := metrics.NewGauge()
 	r.Register("bar", g)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
 				g.Update(19)
-				time.Sleep(300e6)
+				time.Sleep(time.Millisecond * 300)
 			}
 		}()
 		go func() {
 			for {
 				g.Update(47)
-				time.Sleep(400e6)
+				time.Sleep(time.Millisecond * 400)
 			}
 		}()
 	}
 
-	gf := metrix.NewGaugeFloat64()
+	gf := metrics.NewGaugeFloat64()
 	r.Register("barfloat64", gf)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
 				g.Update(19.0)
-				time.Sleep(300e6)
+				time.Sleep(time.Millisecond * 300)
 			}
 		}()
 		go func() {
 			for {
 				g.Update(47.0)
-				time.Sleep(400e6)
+				time.Sleep(time.Millisecond * 400)
 			}
 		}()
 	}
 
-	hc := metrix.NewHealthcheck(func(h metrix.IHealthcheck) {
+	hc := metrics.NewHealthcheck(func(h metrics.IHealthcheck) {
 		if 0 < rand.Intn(2) {
 			h.Healthy()
 		} else {
@@ -72,64 +72,64 @@ func main() {
 	})
 	r.Register("baz", hc)
 
-	s := metrix.NewExpDecaySample(1028, 0.015)
-	//s := metrix.NewUniformSample(1028)
-	h := metrix.NewHistogram(s)
+	s := metrics.NewExpDecaySample(1028, 0.015)
+	h := metrics.NewHistogram(s)
 	r.Register("bang", h)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
 				h.Update(19)
-				time.Sleep(300e6)
+				time.Sleep(time.Millisecond * 300)
 			}
 		}()
 		go func() {
 			for {
 				h.Update(47)
-				time.Sleep(400e6)
+				time.Sleep(time.Millisecond * 400)
 			}
 		}()
 	}
 
-	m := metrix.NewMeter()
+	m := metrics.NewMeter()
 	r.Register("quux", m)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
 				m.Mark(19)
-				time.Sleep(300e6)
+
+				time.Sleep(time.Millisecond * 300)
 			}
 		}()
 		go func() {
 			for {
 				m.Mark(47)
-				time.Sleep(400e6)
+				time.Sleep(time.Millisecond * 400)
 			}
 		}()
 	}
 
-	t := metrix.NewTimer()
+	t := metrics.NewTimer()
 	r.Register("hooah", t)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
-				t.Time(func() { time.Sleep(300e6) })
+				t.Time(func() { time.Sleep(time.Millisecond * 300) })
 			}
 		}()
 		go func() {
 			for {
-				t.Time(func() { time.Sleep(400e6) })
+				t.Time(func() { time.Sleep(time.Millisecond * 400) })
 			}
 		}()
 	}
+	//
+	//metrics.RegisterDebugGCStats(r)
+	//go metrics.CaptureDebugGCStats(r, time.Second)
+	//
+	//metrics.RegisterRuntimeMemStats(r)
+	//go metrics.CaptureRuntimeMemStats(r, time.Second)
 
-	metrix.RegisterDebugGCStats(r)
-	go metrix.CaptureDebugGCStats(r, 5e9)
-
-	metrix.RegisterRuntimeMemStats(r)
-	go metrix.CaptureRuntimeMemStats(r, 5e9)
-
-	metrix.Log(r, 60e9)
+	metrics.Log(r, time.Second)
 
 	/*
 		w, err := syslog.Dial("unixgram", "/dev/log", syslog.LOG_INFO, "metrix")
