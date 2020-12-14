@@ -2,11 +2,25 @@ package krpc
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/util/gutil"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"time"
 )
+
+// UnaryError is the default unary interceptor for error converting from custom error to grpc error.
+func (s *GrpcServer) UnaryError(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	res, err := handler(ctx, req)
+	if err != nil {
+		code := gerror.Code(err)
+		if code != -1 {
+			err = status.Error(codes.Code(code), err.Error())
+		}
+	}
+	return res, err
+}
 
 // UnaryLogger is the default unary interceptor for logging purpose.
 func (s *GrpcServer) UnaryLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -42,4 +56,14 @@ func (s *GrpcServer) UnaryLogger(ctx context.Context, req interface{}, info *grp
 		}
 	}
 	return res, err
+}
+
+// UnaryRecover is the first interceptor that keep server not down from panics.
+func (s *GrpcServer) UnaryRecover(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	gutil.TryCatch(func() {
+		res, err = handler(ctx, req)
+	}, func(exception error) {
+		err = gerror.WrapCode(int(codes.Internal), err, "panic recovered")
+	})
+	return
 }
