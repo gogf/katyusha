@@ -17,11 +17,16 @@ type IHistogram interface {
 	Variance() float64
 }
 
+// Histogram returns an existing Histogram or constructs and registers to defaultRegistry
+func Histogram(name string, s ISample) IHistogram {
+	return GetOrRegisterHistogram(name, defaultRegistry, s)
+}
+
 // GetOrRegisterHistogram returns an existing Histogram or constructs and
 // registers a new StandardHistogram.
 func GetOrRegisterHistogram(name string, r Registry, s ISample) IHistogram {
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	return r.GetOrRegister(name, func() IHistogram { return NewHistogram(s) }).(IHistogram)
 }
@@ -39,7 +44,7 @@ func NewHistogram(s ISample) IHistogram {
 func NewRegisteredHistogram(name string, r Registry, s ISample) IHistogram {
 	c := NewHistogram(s)
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c

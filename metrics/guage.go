@@ -9,11 +9,16 @@ type IGauge interface {
 	Value() int64
 }
 
+// Gauge returns an existing Gauge or constructs and registers to defaultRegistry
+func Gauge(name string) IGauge {
+	return GetOrRegisterGauge(name, defaultRegistry)
+}
+
 // GetOrRegisterGauge returns an existing Gauge or constructs and registers a
 // new StandardGauge.
 func GetOrRegisterGauge(name string, r Registry) IGauge {
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	return r.GetOrRegister(name, NewGauge).(IGauge)
 }
@@ -30,7 +35,7 @@ func NewGauge() IGauge {
 func NewRegisteredGauge(name string, r Registry) IGauge {
 	c := NewGauge()
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c
@@ -48,7 +53,7 @@ func NewFunctionalGauge(f func() int64) IGauge {
 func NewRegisteredFunctionalGauge(name string, r Registry, f func() int64) IGauge {
 	c := NewFunctionalGauge(f)
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c

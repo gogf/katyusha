@@ -10,13 +10,12 @@ import (
 const fanout = 10
 
 func main() {
-	r := metrics.NewRegistry()
 
-	c := metrics.NewCounter()
-	r.Register("foo", c)
+	c := metrics.Counter("foo")
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
+
 				c.Dec(19)
 				time.Sleep(time.Millisecond * 500)
 			}
@@ -29,8 +28,7 @@ func main() {
 		}()
 	}
 
-	g := metrics.NewGauge()
-	r.Register("bar", g)
+	g := metrics.Gauge("bar")
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
@@ -46,18 +44,17 @@ func main() {
 		}()
 	}
 
-	gf := metrics.NewGaugeFloat64()
-	r.Register("barfloat64", gf)
+	gf := metrics.GaugeFloat64("barfloat64")
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
-				g.Update(19.0)
+				gf.Update(19.0)
 				time.Sleep(time.Millisecond * 300)
 			}
 		}()
 		go func() {
 			for {
-				g.Update(47.0)
+				gf.Update(47.0)
 				time.Sleep(time.Millisecond * 400)
 			}
 		}()
@@ -70,11 +67,10 @@ func main() {
 			h.Unhealthy(errors.New("baz"))
 		}
 	})
-	r.Register("baz", hc)
+	_ = metrics.Register("baz", hc)
 
 	s := metrics.NewExpDecaySample(1028, 0.015)
-	h := metrics.NewHistogram(s)
-	r.Register("bang", h)
+	h := metrics.Histogram("bang", s)
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
@@ -90,8 +86,7 @@ func main() {
 		}()
 	}
 
-	m := metrics.NewMeter()
-	r.Register("quux", m)
+	m := metrics.Meter("guux")
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
@@ -108,8 +103,7 @@ func main() {
 		}()
 	}
 
-	t := metrics.NewTimer()
-	r.Register("hooah", t)
+	t := metrics.Timer("hooah")
 	for i := 0; i < fanout; i++ {
 		go func() {
 			for {
@@ -129,7 +123,7 @@ func main() {
 	//metrics.RegisterRuntimeMemStats(r)
 	//go metrics.CaptureRuntimeMemStats(r, time.Second)
 
-	metrics.Log(r, time.Second)
+	metrics.Log(time.Second)
 
 	/*
 		w, err := syslog.Dial("unixgram", "/dev/log", syslog.LOG_INFO, "metrix")

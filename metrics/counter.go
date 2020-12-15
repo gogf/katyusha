@@ -13,11 +13,16 @@ type (
 	}
 )
 
+// Counter returns an existing Counter or constructs and registers to defaultRegistry
+func Counter(name string) ICounter {
+	return GetOrRegisterCounter(name, defaultRegistry)
+}
+
 // GetOrRegisterCounter returns an existing Counter or constructs and registers
 // a new StandardCounter.
 func GetOrRegisterCounter(name string, r Registry) ICounter {
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	return r.GetOrRegister(name, NewCounter).(ICounter)
 }
@@ -34,7 +39,7 @@ func NewCounter() ICounter {
 func NewRegisteredCounter(name string, r Registry) ICounter {
 	c := NewCounter()
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c

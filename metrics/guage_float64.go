@@ -12,11 +12,16 @@ type IGaugeFloat64 interface {
 	Value() float64
 }
 
+// GaugeFloat64 returns an existing GaugeFloat64 or constructs and registers to defaultRegistry
+func GaugeFloat64(name string) IGaugeFloat64 {
+	return GetOrRegisterGaugeFloat64(name, defaultRegistry)
+}
+
 // GetOrRegisterGaugeFloat64 returns an existing GaugeFloat64 or constructs and registers a
 // new StandardGaugeFloat64.
 func GetOrRegisterGaugeFloat64(name string, r Registry) IGaugeFloat64 {
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	return r.GetOrRegister(name, NewGaugeFloat64()).(IGaugeFloat64)
 }
@@ -35,7 +40,7 @@ func NewGaugeFloat64() IGaugeFloat64 {
 func NewRegisteredGaugeFloat64(name string, r Registry) IGaugeFloat64 {
 	c := NewGaugeFloat64()
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c
@@ -53,7 +58,7 @@ func NewFunctionalGaugeFloat64(f func() float64) IGaugeFloat64 {
 func NewRegisteredFunctionalGaugeFloat64(name string, r Registry, f func() float64) IGaugeFloat64 {
 	c := NewFunctionalGaugeFloat64(f)
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c
