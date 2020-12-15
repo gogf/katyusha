@@ -20,13 +20,18 @@ type IMeter interface {
 	Stop()
 }
 
+// Meter returns an existing Meter or constructs and registers to defaultRegistry
+func Meter(name string) IMeter {
+	return GetOrRegisterMeter(name, defaultRegistry)
+}
+
 // GetOrRegisterMeter returns an existing Meter or constructs and registers a
 // new StandardMeter.
 // Be sure to unregister the meter from the registry once it is of no use to
 // allow for garbage collection.
 func GetOrRegisterMeter(name string, r Registry) IMeter {
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	return r.GetOrRegister(name, NewMeter).(IMeter)
 }
@@ -55,7 +60,7 @@ func NewMeter() IMeter {
 func NewRegisteredMeter(name string, r Registry) IMeter {
 	c := NewMeter()
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c

@@ -27,13 +27,18 @@ type ITimer interface {
 	Variance() float64
 }
 
+// Timer returns an existing Timer or constructs and registers to defaultRegistry
+func Timer(name string) ITimer {
+	return GetOrRegisterTimer(name, defaultRegistry)
+}
+
 // GetOrRegisterTimer returns an existing Timer or constructs and registers a
 // new StandardTimer.
 // Be sure to unregister the meter from the registry once it is of no use to
 // allow for garbage collection.
 func GetOrRegisterTimer(name string, r Registry) ITimer {
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	return r.GetOrRegister(name, NewTimer).(ITimer)
 }
@@ -56,7 +61,7 @@ func NewCustomTimer(h IHistogram, m IMeter) ITimer {
 func NewRegisteredTimer(name string, r Registry) ITimer {
 	c := NewTimer()
 	if nil == r {
-		r = DefaultRegistry
+		r = defaultRegistry
 	}
 	r.Register(name, c)
 	return c

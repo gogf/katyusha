@@ -5,8 +5,13 @@ import (
 	"time"
 )
 
+// Log outputs each metric in the defaultRegistry periodically using the given logger.
+func Log(freq time.Duration) {
+	LogScaled(defaultRegistry, freq, time.Nanosecond)
+}
+
 // Log outputs each metric in the given registry periodically using the given logger.
-func Log(r Registry, freq time.Duration) {
+func LogWithRegistry(r Registry, freq time.Duration) {
 	LogScaled(r, freq, time.Nanosecond)
 }
 
