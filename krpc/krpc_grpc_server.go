@@ -34,6 +34,13 @@ func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config = conf[0]
 	} else {
 		config = s.NewGrpcServerConfig()
+		// Reading configuration file and updating the configured keys.
+		if g.Cfg().Available() {
+			err := g.Cfg().GetVar(configNodeNameGrpcServer).Struct(&config)
+			if err != nil {
+				g.Log().Error(err)
+			}
+		}
 	}
 	if config.Address == "" {
 		g.Log().Fatal("server address cannot be empty")
@@ -90,7 +97,7 @@ func (s *GrpcServer) Run() {
 		s.Logger.Fatal(err)
 	}
 	if len(s.services) == 0 {
-		appId := gcmd.GetWithEnv(discovery.EnvKeyAppId).String()
+		appId := gcmd.GetWithEnv(discovery.EnvKey.AppId).String()
 		if appId != "" {
 			// Automatically creating service if app id can be retrieved
 			// from environment or command-line.

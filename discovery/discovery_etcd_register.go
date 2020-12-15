@@ -24,9 +24,9 @@ var (
 	defaultDiscovery Discovery
 )
 
-// SetDiscovery sets the default Discovery implements as your own implemented interface.
+// SetDefault sets the default Discovery implements as your own implemented interface.
 // This configuration function should be called before using function `Register`.
-func SetDiscovery(discovery Discovery) {
+func SetDefault(discovery Discovery) {
 	defaultDiscovery = discovery
 }
 
@@ -41,7 +41,7 @@ func initDefaultDiscovery() error {
 	}
 	defaultDiscovery = &etcdDiscovery{
 		etcd3Client:  client,
-		keepaliveTtl: gcmd.GetWithEnv(EnvKeyKeepAlive, DefaultKeepAliveTtl).Duration(),
+		keepaliveTtl: gcmd.GetWithEnv(EnvKey.KeepAlive, DefaultValue.KeepAlive).Duration(),
 	}
 	return nil
 }
@@ -67,7 +67,7 @@ func Unregister(service *Service) error {
 	return defaultDiscovery.Unregister(service)
 }
 
-// Close closes the Registry for gracefully shutdown purpose.
+// Close closes the default Registry for gracefully shutdown purpose.
 func Close() error {
 	if err := initDefaultDiscovery(); err != nil {
 		return err
@@ -79,26 +79,29 @@ func Close() error {
 func (r *etcdDiscovery) Register(service *Service) error {
 	// Necessary.
 	if service.AppId == "" {
-		service.AppId = gcmd.GetWithEnv(EnvKeyAppId).String()
+		service.AppId = gcmd.GetWithEnv(EnvKey.AppId).String()
 		if service.AppId == "" {
 			return gerror.New(`service app id cannot be empty`)
 		}
 	}
 	// Necessary.
 	if service.Address == "" {
-		service.Address = gcmd.GetWithEnv(EnvKeyAddress).String()
+		service.Address = gcmd.GetWithEnv(EnvKey.Address).String()
 		if service.Address == "" {
 			return gerror.Newf(`service address for "%s" cannot be empty`, service.AppId)
 		}
 	}
 	if service.Deployment == "" {
-		service.Deployment = gcmd.GetWithEnv(EnvKeyDeployment, DefaultDeployment).String()
+		service.Deployment = gcmd.GetWithEnv(EnvKey.Deployment, DefaultValue.Deployment).String()
 	}
 	if service.Group == "" {
-		service.Group = gcmd.GetWithEnv(EnvKeyGroup, DefaultGroup).String()
+		service.Group = gcmd.GetWithEnv(EnvKey.Group, DefaultValue.Group).String()
 	}
 	if service.Version == "" {
-		service.Version = gcmd.GetWithEnv(EnvKeyVersion, DefaultVersion).String()
+		service.Version = gcmd.GetWithEnv(EnvKey.Version, DefaultValue.Version).String()
+	}
+	if len(service.Metadata) == 0 {
+		service.Metadata = gcmd.GetWithEnv(EnvKey.Metadata).Map()
 	}
 	metadataMarshalBytes, err := json.Marshal(service.Metadata)
 	if err != nil {
@@ -110,7 +113,8 @@ func (r *etcdDiscovery) Register(service *Service) error {
 	)
 
 	//g.Log().Debugf(`register key: %s`, serviceRegisterKey)
-	resp, err := r.etcd3Client.Grant(context.Background(), int64(r.keepaliveTtl/time.Second))
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	resp, err := r.etcd3Client.Grant(ctx, int64(r.keepaliveTtl/time.Second))
 	if err != nil {
 		return err
 	}

@@ -7,21 +7,11 @@ import (
 	"github.com/gogf/gf/text/gstr"
 )
 
-// Service definition.
-type Service struct {
-	AppId      string // (necessary) Unique id for the service, only for service discovery.
-	Address    string // (necessary) Service address, single one, usually IP:port, eg: 192.168.1.2:8000
-	Deployment string // (optional)  Service deployment name, eg: dev, qa, staging, prod, etc.
-	Group      string // (optional)  Service group, to indicate different service in the same environment with the same Name and AppId.
-	Version    string // (optional)  Service version, eg: v1.0.0, v2.1.1, etc.
-	Metadata   g.Map  // (optional)  Custom data for this service, which can be set using JSON by environment or command-line.
-}
-
 // RegisterKey formats the service information with `registryDir` and returns the key string
 // for registering.
 func (s *Service) RegisterKey() string {
 	return gstr.Join([]string{
-		gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
+		gcmd.GetWithEnv(EnvKey.PrefixRoot, DefaultValue.PrefixRoot).String(),
 		s.Deployment,
 		s.Group,
 		s.AppId,

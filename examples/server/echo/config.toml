@@ -1,0 +1,11 @@
+[discovery]
+    appId     = "echo"
+    endpoints = ["127.0.0.1:2379"]
+
+[grpcserver]
+    address          = ":8001"
+    logPath          = "./log"
+    logStdout        = true
+    errorLogEnabled  = true
+    accessLogEnabled = true
+

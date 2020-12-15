@@ -2,13 +2,14 @@ package discovery
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gconv"
+	"github.com/gogf/gf/util/gutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
 	"sync"
+	"time"
 )
 
 type etcdWatcher struct {
@@ -56,7 +57,7 @@ func (w *etcdWatcher) Watch() chan []resolver.Address {
 					}
 					address := resolver.Address{
 						Addr:       service.Address,
-						Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
+						Attributes: attributes.New(gutil.MapToSlice(service.Metadata)...),
 					}
 					if w.addAddress(address) {
 						w.updateAddressesToCh(addressCh)
@@ -70,7 +71,7 @@ func (w *etcdWatcher) Watch() chan []resolver.Address {
 					}
 					address := resolver.Address{
 						Addr:       service.Address,
-						Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
+						Attributes: attributes.New(gutil.MapToSlice(service.Metadata)...),
 					}
 					if w.removeAddress(address) {
 						w.updateAddressesToCh(addressCh)
@@ -84,8 +85,13 @@ func (w *etcdWatcher) Watch() chan []resolver.Address {
 
 // initializeAddresses retrieves data from discovery server and initializes the address list.
 func (w *etcdWatcher) initializeAddresses() {
-	res, err := w.etcdClient.Get(w.ctx, w.key, etcd3.WithPrefix())
-	if err != nil || res == nil {
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
+	res, err := w.etcdClient.Get(ctx, w.key, etcd3.WithPrefix())
+	if err != nil {
+		g.Log().Error(err)
+		return
+	}
+	if res == nil {
 		return
 	}
 	services := extractServices(res)
@@ -94,7 +100,7 @@ func (w *etcdWatcher) initializeAddresses() {
 		for _, service := range services {
 			w.addresses = append(w.addresses, resolver.Address{
 				Addr:       service.Address,
-				Attributes: attributes.New(gconv.Interfaces(service.Metadata)...),
+				Attributes: attributes.New(gutil.MapToSlice(service.Metadata)...),
 			})
 		}
 	}

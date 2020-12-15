@@ -1,6 +1,7 @@
 package discovery
 
 import (
+	"github.com/gogf/gf/frame/g"
 	"time"
 )
 
@@ -12,23 +13,68 @@ type Discovery interface {
 	Close() error
 }
 
+// Config is the configuration definition for discovery.
+type Config struct {
+	Endpoints  []string      // (necessary) The discovery server endpoints.
+	PrefixRoot string        // (optional) Prefix string for discovery.
+	KeepAlive  time.Duration // (optional) Keepalive duration for watcher.
+}
+
+// Service definition.
+type Service struct {
+	AppId      string // (necessary) Unique id for the service, only for service discovery.
+	Address    string // (necessary) Service address, single one, usually IP:port, eg: 192.168.1.2:8000
+	Deployment string // (optional)  Service deployment name, eg: dev, qa, staging, prod, etc.
+	Group      string // (optional)  Service group, to indicate different service in the same environment with the same Name and AppId.
+	Version    string // (optional)  Service version, eg: v1.0.0, v2.1.1, etc.
+	Metadata   g.Map  // (optional)  Custom data for this service, which can be set using JSON by environment or command-line.
+}
+
+type discoveryEnvKey struct {
+	PrefixRoot string
+	KeepAlive  string
+	AppId      string
+	Address    string
+	Version    string
+	Deployment string
+	Group      string
+	Metadata   string
+	Endpoints  string
+}
+
+type discoveryDefaultValue struct {
+	PrefixRoot string
+	KeepAlive  time.Duration
+	Version    string
+	Deployment string
+	Group      string
+	Scheme     string
+}
+
 const (
-	EnvKeyPrefixRoot = "KA_PREFIX_ROOT"
-	EnvKeyKeepAlive  = "KA_KEEPALIVE"
-	EnvKeyAppId      = "KA_APP_ID"
-	EnvKeyAddress    = "KA_ADDRESS"
-	EnvKeyVersion    = "KA_VERSION"
-	EnvKeyDeployment = "KA_DEPLOYMENT"
-	EnvKeyGroup      = "KA_GROUP"
-	EnvKeyMetaData   = "KA_METADATA"
-	EnvKeyEndpoints  = "KA_ENDPOINTS"
+	configNodeNameDiscovery = "discovery"
+	configNodeNameService   = "service"
 )
 
 var (
-	DefaultDeployment   = "default"
-	DefaultGroup        = "default"
-	DefaultVersion      = "v0.0.0"
-	DefaultKeepAliveTtl = 10 * time.Second
-	DefaultPrefixRoot   = "/katyusha"
-	DefaultScheme       = "katyusha"
+	EnvKey = discoveryEnvKey{
+		PrefixRoot: "KA_PREFIX_ROOT",
+		KeepAlive:  "KA_KEEPALIVE",
+		AppId:      "KA_APP_ID",
+		Address:    "KA_ADDRESS",
+		Version:    "KA_VERSION",
+		Deployment: "KA_DEPLOYMENT",
+		Group:      "KA_GROUP",
+		Metadata:   "KA_METADATA",
+		Endpoints:  "KA_ENDPOINTS",
+	}
+
+	DefaultValue = discoveryDefaultValue{
+		PrefixRoot: "/katyusha",
+		KeepAlive:  10 * time.Second,
+		Version:    "v0.0.0",
+		Deployment: "default",
+		Group:      "default",
+		Scheme:     "katyusha",
+	}
 )

@@ -36,9 +36,9 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 		r.etcdWatcher = newEtcdWatcher(
 			etcdClient,
 			gstr.Join([]string{
-				gcmd.GetWithEnv(EnvKeyPrefixRoot, DefaultPrefixRoot).String(),
-				gcmd.GetWithEnv(EnvKeyDeployment, DefaultDeployment).String(),
-				gcmd.GetWithEnv(EnvKeyGroup, DefaultGroup).String(),
+				gcmd.GetWithEnv(EnvKey.PrefixRoot, DefaultValue.PrefixRoot).String(),
+				gcmd.GetWithEnv(EnvKey.Deployment, DefaultValue.Deployment).String(),
+				gcmd.GetWithEnv(EnvKey.Group, DefaultValue.Group).String(),
 				target.Endpoint,
 			}, "/"),
 		)
@@ -63,7 +63,7 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 
 // Scheme implements interface google.golang.org/grpc/resolver.Builder.
 func (r *etcdBuilder) Scheme() string {
-	return DefaultScheme
+	return DefaultValue.Scheme
 }
 
 // ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.

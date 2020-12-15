@@ -13,14 +13,14 @@ var (
 )
 
 // getEtcdClient creates and returns an instance for etcd client.
-// It returns the same instance object if it is already created one.
+// It returns the same instance object if it already created one.
 func getEtcdClient() (*etcd3.Client, error) {
 	if etcdClient != nil {
 		return etcdClient, nil
 	}
-	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKeyEndpoints).String(), ",")
+	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKey.Endpoints).String(), ",")
 	if len(endpoints) == 0 {
-		return nil, gerror.New(`endpoints not found from environment or command-line`)
+		return nil, gerror.New(`endpoints not found from environment, command-line or configuration file`)
 	}
 	client, err := etcd3.New(etcd3.Config{
 		Endpoints: endpoints,
