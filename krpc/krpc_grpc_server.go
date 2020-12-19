@@ -133,21 +133,21 @@ func (s *GrpcServer) Run() {
 		syscall.SIGABRT,
 	)
 	for {
-		switch <-sigChan {
+		sig := <-sigChan
+		switch sig {
 		case
 			syscall.SIGINT,
 			syscall.SIGQUIT,
 			syscall.SIGKILL,
 			syscall.SIGTERM,
 			syscall.SIGABRT:
-			s.Logger.Print("gracefully shutting down")
+			s.Logger.Printf("signal received: %s, gracefully shutting down", sig.String())
 			for _, service := range s.services {
 				discovery.Unregister(service)
 			}
 			time.Sleep(time.Second)
 			s.Stop()
 			return
-		default:
 		}
 	}
 }

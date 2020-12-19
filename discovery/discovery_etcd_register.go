@@ -112,18 +112,18 @@ func (r *etcdDiscovery) Register(service *Service) error {
 		serviceRegisterKey = service.RegisterKey()
 	)
 
-	//g.Log().Debugf(`register key: %s`, serviceRegisterKey)
+	g.Log().Debugf(`service register key: %s`, serviceRegisterKey)
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	resp, err := r.etcd3Client.Grant(ctx, int64(r.keepaliveTtl/time.Second))
 	if err != nil {
 		return err
 	}
-	//g.Log().Debugf(`registered: %d, %s`, resp.ID, metadataMarshalStr)
+	g.Log().Debugf(`service registered lease id: %d, metadata: %s`, resp.ID, metadataMarshalStr)
 	r.etcdGrantId = resp.ID
 	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
 		return err
 	}
-	//g.Log().Debugf(`request keepalive for grant id: %d`, resp.ID)
+	g.Log().Debugf(`service request keepalive for grant id: %d`, resp.ID)
 	keepAliceCh, err := r.etcd3Client.KeepAlive(context.Background(), resp.ID)
 	if err != nil {
 		return err
