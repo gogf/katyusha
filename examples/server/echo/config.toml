@@ -1,8 +1,8 @@
 [discovery]
-    appId     = "echo"
     endpoints = ["127.0.0.1:2379"]
 
 [grpcserver]
+    appId            = ["echo"]
     address          = ":8001"
     logPath          = "./log"
     logStdout        = true

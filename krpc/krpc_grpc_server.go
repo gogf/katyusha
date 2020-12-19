@@ -34,13 +34,6 @@ func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config = conf[0]
 	} else {
 		config = s.NewGrpcServerConfig()
-		// Reading configuration file and updating the configured keys.
-		if g.Cfg().Available() {
-			err := g.Cfg().GetVar(configNodeNameGrpcServer).Struct(&config)
-			if err != nil {
-				g.Log().Error(err)
-			}
-		}
 	}
 	if config.Address == "" {
 		g.Log().Fatal("server address cannot be empty")
@@ -87,7 +80,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 			service.Address = serviceAddress
 		}
 	}
-	s.services = services
+	s.services = append(s.services, services...)
 }
 
 // Run starts the server in blocking way.
@@ -104,6 +97,14 @@ func (s *GrpcServer) Run() {
 			s.Service(&discovery.Service{
 				AppId: appId,
 			})
+		}
+		// Check any application identities bound with server.
+		if len(s.config.AppId) > 0 {
+			for _, appId := range s.config.AppId {
+				s.Service(&discovery.Service{
+					AppId: appId,
+				})
+			}
 		}
 	}
 	// Start listening.

@@ -55,7 +55,7 @@ func Register(service *Service) error {
 }
 
 // Services returns all registered service list.
-func Services() []*Service {
+func Services() ([]*Service, error) {
 	return defaultDiscovery.Services()
 }
 
@@ -154,8 +154,9 @@ func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Le
 }
 
 // Services returns all registered service list.
-func (r *etcdDiscovery) Services() []*Service {
-	return nil
+// TODO implements.
+func (r *etcdDiscovery) Services() ([]*Service, error) {
+	return nil, gerror.New("not implemented")
 }
 
 // Unregister removes `service` from ETCD.

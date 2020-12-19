@@ -9,7 +9,7 @@ import (
 type Discovery interface {
 	Register(service *Service) error
 	Unregister(service *Service) error
-	Services() []*Service
+	Services() ([]*Service, error)
 	Close() error
 }
 
