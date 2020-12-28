@@ -17,9 +17,6 @@ type EWMA interface {
 
 // NewEWMA constructs a new EWMA with the given alpha.
 func NewEWMA(alpha float64) EWMA {
-	if UseNilMetrics {
-		return NilEWMA{}
-	}
 	return &StandardEWMA{alpha: alpha}
 }
 
@@ -57,21 +54,6 @@ func (EWMASnapshot) Tick() {
 func (EWMASnapshot) Update(int64) {
 	panic("Update called on an EWMASnapshot")
 }
-
-// NilEWMA is a no-op EWMA.
-type NilEWMA struct{}
-
-// Rate is a no-op.
-func (NilEWMA) Rate() float64 { return 0.0 }
-
-// Snapshot is a no-op.
-func (NilEWMA) Snapshot() EWMA { return NilEWMA{} }
-
-// Tick is a no-op.
-func (NilEWMA) Tick() {}
-
-// Update is a no-op.
-func (NilEWMA) Update(n int64) {}
 
 // StandardEWMA is the standard implementation of an EWMA and tracks the number
 // of uncounted events and processes them on each tick.  It uses the

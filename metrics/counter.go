@@ -29,9 +29,6 @@ func GetOrRegisterCounter(name string, r Registry) ICounter {
 
 // NewCounter constructs a new StandardCounter.
 func NewCounter() ICounter {
-	if UseNilMetrics {
-		return NilCounter{}
-	}
 	return &StandardCounter{0}
 }
 
@@ -99,21 +96,3 @@ func (CounterSnapshot) Inc(int64) {
 
 // Snapshot returns the snapshot.
 func (c CounterSnapshot) Snapshot() ICounter { return c }
-
-// NilCounter is a no-op Counter.
-type NilCounter struct{}
-
-// Clear is a no-op.
-func (NilCounter) Clear() {}
-
-// Count is a no-op.
-func (NilCounter) Count() int64 { return 0 }
-
-// Dec is a no-op.
-func (NilCounter) Dec(i int64) {}
-
-// Inc is a no-op.
-func (NilCounter) Inc(i int64) {}
-
-// Snapshot is a no-op.
-func (NilCounter) Snapshot() ICounter { return NilCounter{} }

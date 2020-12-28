@@ -33,9 +33,6 @@ func GetOrRegisterHistogram(name string, r Registry, s ISample) IHistogram {
 
 // NewHistogram constructs a new StandardHistogram from a Sample.
 func NewHistogram(s ISample) IHistogram {
-	if UseNilMetrics {
-		return NilHistogram{}
-	}
 	return &StandardHistogram{sample: s}
 }
 
@@ -108,50 +105,6 @@ func (*HistogramSnapshot) Update(int64) {
 
 // Variance returns the variance of inputs at the time the snapshot was taken.
 func (h *HistogramSnapshot) Variance() float64 { return h.sample.Variance() }
-
-// NilHistogram is a no-op Histogram.
-type NilHistogram struct{}
-
-// Clear is a no-op.
-func (NilHistogram) Clear() {}
-
-// Count is a no-op.
-func (NilHistogram) Count() int64 { return 0 }
-
-// Max is a no-op.
-func (NilHistogram) Max() int64 { return 0 }
-
-// Mean is a no-op.
-func (NilHistogram) Mean() float64 { return 0.0 }
-
-// Min is a no-op.
-func (NilHistogram) Min() int64 { return 0 }
-
-// Percentile is a no-op.
-func (NilHistogram) Percentile(p float64) float64 { return 0.0 }
-
-// Percentiles is a no-op.
-func (NilHistogram) Percentiles(ps []float64) []float64 {
-	return make([]float64, len(ps))
-}
-
-// Sample is a no-op.
-func (NilHistogram) Sample() ISample { return NilSample{} }
-
-// Snapshot is a no-op.
-func (NilHistogram) Snapshot() IHistogram { return NilHistogram{} }
-
-// StdDev is a no-op.
-func (NilHistogram) StdDev() float64 { return 0.0 }
-
-// Sum is a no-op.
-func (NilHistogram) Sum() int64 { return 0 }
-
-// Update is a no-op.
-func (NilHistogram) Update(v int64) {}
-
-// Variance is a no-op.
-func (NilHistogram) Variance() float64 { return 0.0 }
 
 // StandardHistogram is the standard implementation of a Histogram and uses a
 // Sample to bound its memory use.

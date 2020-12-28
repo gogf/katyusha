@@ -11,26 +11,8 @@ type IHealthcheck interface {
 // NewHealthcheck constructs a new Healthcheck which will use the given
 // function to update its status.
 func NewHealthcheck(f func(IHealthcheck)) IHealthcheck {
-	if UseNilMetrics {
-		return NilHealthcheck{}
-	}
 	return &StandardHealthcheck{nil, f}
 }
-
-// NilHealthcheck is a no-op.
-type NilHealthcheck struct{}
-
-// Check is a no-op.
-func (NilHealthcheck) Check() {}
-
-// Error is a no-op.
-func (NilHealthcheck) Error() error { return nil }
-
-// Healthy is a no-op.
-func (NilHealthcheck) Healthy() {}
-
-// Unhealthy is a no-op.
-func (NilHealthcheck) Unhealthy(error) {}
 
 // StandardHealthcheck is the standard implementation of a Healthcheck and
 // stores the status and a function to call to update the status.

@@ -10,7 +10,6 @@ import (
 const fanout = 10
 
 func main() {
-
 	c := metrics.Counter("foo")
 	for i := 0; i < fanout; i++ {
 		go func() {
