@@ -18,6 +18,11 @@ func Each(f func(string, interface{})) {
 	defaultRegistry.Each(f)
 }
 
+// Get the default registry.
+func GetDefaultRegistry() Registry {
+	return defaultRegistry
+}
+
 // Get the metric by the given name or nil if none is registered.
 func Get(name string) interface{} {
 	return defaultRegistry.Get(name)
