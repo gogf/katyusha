@@ -2,8 +2,11 @@ package krpc
 
 import (
 	"context"
+	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/util/gvalid"
 	"github.com/gogf/katyusha/krpc/internal/tracing"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 )
 
 // ChainUnary returns a ServerOption that specifies the chained interceptor
@@ -20,6 +23,18 @@ func (s *krpcServer) ChainUnary(interceptors ...grpc.UnaryServerInterceptor) grp
 // All stream interceptors added by this method will be chained.
 func (s *krpcServer) ChainStream(interceptors ...grpc.StreamServerInterceptor) grpc.ServerOption {
 	return grpc.ChainStreamInterceptor(interceptors...)
+}
+
+// Common validation unary interpreter.
+func (s *krpcServer) UnaryValidate(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	// It does nothing if there's no validation tag in the struct definition.
+	if err := gvalid.CheckStruct(req, nil); err != nil {
+		return nil, gerror.NewCode(
+			int(codes.InvalidArgument),
+			gerror.Current(err).Error(),
+		)
+	}
+	return handler(ctx, req)
 }
 
 // UnaryTracing returns a grpc.UnaryServerInterceptor suitable for use in a grpc.NewServer call.
