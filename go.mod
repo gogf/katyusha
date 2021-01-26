@@ -4,7 +4,7 @@ go 1.11
 
 require (
 	github.com/gogf/gcache-adapter v0.0.4-0.20210126062229-c84b9cefa528
-	github.com/gogf/gf v1.15.2-0.20210126085339-24e2c7926e39
+	github.com/gogf/gf v1.15.2-0.20210126165545-f5ba665c5982
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.4.3
 	github.com/json-iterator/go v1.1.10 // indirect

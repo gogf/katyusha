@@ -17,7 +17,7 @@ import (
 type server struct{}
 
 const (
-	JaegerEndpoint = "http://localhost:14268/s/traces"
+	JaegerEndpoint = "http://localhost:14268/api/traces"
 	ServiceName    = "tracing-grpc-server"
 )
 
@@ -90,17 +90,19 @@ func main() {
 
 	g.DB().GetCache().SetAdapter(adapter.NewRedis(g.Redis()))
 
-	listen, err := net.Listen("tcp", ":8000")
+	address := ":8000"
+	listen, err := net.Listen("tcp", address)
 	if err != nil {
 		g.Log().Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			krpc.Server.UnaryValidate,
 			krpc.Server.UnaryTracing,
+			krpc.Server.UnaryValidate,
 		),
 	)
 	user.RegisterUserServer(s, &server{})
+	g.Log().Printf("grpc server starts listening on %s", address)
 	if err := s.Serve(listen); err != nil {
 		g.Log().Fatalf("failed to serve: %v", err)
 	}
