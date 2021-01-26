@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/katyusha/krpc/internal/tracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -66,4 +67,9 @@ func (s *GrpcServer) UnaryRecover(ctx context.Context, req interface{}, info *gr
 		err = gerror.WrapCode(int(codes.Internal), err, "panic recovered")
 	})
 	return
+}
+
+// UnaryTracing returns a grpc.UnaryServerInterceptor suitable for use in a grpc.NewServer call.
+func (s *GrpcServer) UnaryTracing(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return tracing.UnaryServerInterceptor(ctx, req, info, handler)
 }

@@ -3,6 +3,7 @@ package krpc
 import (
 	"context"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/katyusha/krpc/internal/tracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -22,4 +23,11 @@ func (c *krpcClient) UnaryError(ctx context.Context, method string, req, reply i
 		}
 	}
 	return err
+}
+
+// UnaryTracing returns a grpc.UnaryClientInterceptor suitable for use in a grpc.Dial call.
+func (c *krpcClient) UnaryTracing(
+	ctx context.Context, method string, req, reply interface{},
+	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+	return tracing.UnaryClientInterceptor(ctx, method, req, reply, cc, invoker, opts...)
 }
