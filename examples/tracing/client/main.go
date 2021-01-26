@@ -5,6 +5,7 @@ import (
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/katyusha/examples/tracing/protobuf/user"
+	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
 	"google.golang.org/grpc"
@@ -35,7 +36,17 @@ func StartRequests() {
 	ctx, span := gtrace.Tracer().Start(context.Background(), "StartRequests")
 	defer span.End()
 
-	conn, err := grpc.Dial(":8000", grpc.WithInsecure(), grpc.WithBlock())
+	grpcClientOptions := make([]grpc.DialOption, 0)
+	grpcClientOptions = append(
+		grpcClientOptions,
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithChainUnaryInterceptor(
+			krpc.Client.UnaryTracing,
+		),
+	)
+
+	conn, err := grpc.Dial(":8000", grpcClientOptions...)
 	if err != nil {
 		g.Log().Fatalf("did not connect: %v", err)
 	}
