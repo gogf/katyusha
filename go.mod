@@ -11,8 +11,6 @@ require (
 	go.opentelemetry.io/otel v0.16.0
 	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
 	google.golang.org/grpc v1.33.2
-	google.golang.org/protobuf v1.25.0 // indirect
-	honnef.co/go/tools v0.0.1-2020.1.4 // indirect
 )
 
 replace (
