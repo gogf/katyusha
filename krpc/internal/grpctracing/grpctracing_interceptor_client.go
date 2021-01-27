@@ -2,6 +2,7 @@ package grpctracing
 
 import (
 	"context"
+	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/katyusha"
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
@@ -19,7 +20,7 @@ import (
 func UnaryClientInterceptor(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, callOpts ...grpc.CallOption) error {
 	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcClient",
+		"github.com/gogf/katyusha/krpc.GrpcClient.Unary",
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
 	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
@@ -38,15 +39,27 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
 
-	span.AddEvent("grpc.request", trace.WithAttributes(
-		label.Any(`grpc.metadata.outgoing`, grpcctx.Ctx.OutgoingMap(ctx)),
-		label.String(`grpc.request.message`, grpcutils.MarshalPbMessageToJsonString(req)),
+	span.SetAttributes(gtrace.CommonLabels()...)
+
+	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
+		label.Any(tracingEventGrpcMetadataOutgoing, grpcctx.Ctx.OutgoingMap(ctx)),
+		label.String(
+			tracingEventGrpcRequestMessage,
+			grpcutils.MarshalMessageToJsonStringForTracing(
+				req, "Request", tracingMaxContentLogSize,
+			),
+		),
 	))
 
 	err := invoker(ctx, method, req, reply, cc, callOpts...)
 
-	span.AddEvent("grpc.response", trace.WithAttributes(
-		label.String(`grpc.response.message`, grpcutils.MarshalPbMessageToJsonString(reply)),
+	span.AddEvent(tracingEventGrpcResponse, trace.WithAttributes(
+		label.String(
+			tracingEventGrpcResponseMessage,
+			grpcutils.MarshalMessageToJsonStringForTracing(
+				reply, "Response", tracingMaxContentLogSize,
+			),
+		),
 	))
 
 	if err != nil {
@@ -65,15 +78,14 @@ func StreamClientInterceptor(
 	ctx context.Context, desc *grpc.StreamDesc,
 	cc *grpc.ClientConn, method string, streamer grpc.Streamer,
 	callOpts ...grpc.CallOption) (grpc.ClientStream, error) {
-	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
-	metadataCopy := requestMetadata.Copy()
-
 	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcClient",
+		"github.com/gogf/katyusha/krpc.GrpcClient.Stream",
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
-
+	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
+	metadataCopy := requestMetadata.Copy()
 	name, attr := spanInfo(method, cc.Target())
+
 	var span trace.Span
 	ctx, span = tracer.Start(
 		ctx,
@@ -85,9 +97,10 @@ func StreamClientInterceptor(
 	Inject(ctx, &metadataCopy)
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
 
+	span.SetAttributes(gtrace.CommonLabels()...)
+
 	s, err := streamer(ctx, desc, cc, method, callOpts...)
 	stream := wrapClientStream(s, desc)
-
 	go func() {
 		if err == nil {
 			err = <-stream.finished

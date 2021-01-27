@@ -19,6 +19,16 @@ const (
 	GRPCStatusCodeKey = label.Key("rpc.grpc.status_code")
 )
 
+const (
+	tracingMaxContentLogSize         = 512 * 1024 // Max log size for request and response body.
+	tracingEventGrpcRequest          = "grpc.request"
+	tracingEventGrpcRequestMessage   = "grpc.request.message"
+	tracingEventGrpcMetadataOutgoing = "grpc.metadata.outgoing"
+	tracingEventGrpcMetadataIncoming = "grpc.metadata.incoming"
+	tracingEventGrpcResponse         = "grpc.response"
+	tracingEventGrpcResponseMessage  = "grpc.response.message"
+)
+
 // config is a group of options for this instrumentation.
 type config struct {
 	Propagators    propagation.TextMapPropagator
