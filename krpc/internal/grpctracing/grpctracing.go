@@ -1,6 +1,6 @@
 // opentelemetry-go-contrib/instrumentation/google.golang.org/grpc/otelgrpc/interceptor.go
 
-package tracing
+package grpctracing
 
 import (
 	"context"

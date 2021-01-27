@@ -1,9 +1,12 @@
-package tracing
+package grpctracing
 
 import (
 	"context"
 	"github.com/gogf/katyusha"
+	"github.com/gogf/katyusha/krpc/internal/grpcctx"
+	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -34,11 +37,18 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	Inject(ctx, &metadataCopy)
 
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
-	messageSent.Event(ctx, 1, req)
+
+	span.AddEvent("grpc.request", trace.WithAttributes(
+		label.Any(`grpc.metadata.outgoing`, grpcctx.Ctx.OutgoingMap(ctx)),
+		label.String(`grpc.request.message`, grpcutils.MarshalPbMessageToJsonString(req)),
+	))
 
 	err := invoker(ctx, method, req, reply, cc, callOpts...)
 
-	messageReceived.Event(ctx, 1, reply)
+	span.AddEvent("grpc.response", trace.WithAttributes(
+		label.String(`grpc.response.message`, grpcutils.MarshalPbMessageToJsonString(reply)),
+	))
+
 	if err != nil {
 		s, _ := status.FromError(err)
 		span.SetStatus(codes.Error, s.Message())

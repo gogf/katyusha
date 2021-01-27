@@ -69,7 +69,8 @@ func StartRequests() {
 		Id: insertRes.Id,
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+		g.Log().Ctx(ctx).Printf(`%+v`, err)
+		return
 	}
 	g.Log().Ctx(ctx).Println("query:", queryRes)
 
@@ -78,7 +79,8 @@ func StartRequests() {
 		Id: insertRes.Id,
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+		g.Log().Ctx(ctx).Printf(`%+v`, err)
+		return
 	}
 	g.Log().Ctx(ctx).Println("delete:", insertRes.Id)
 
@@ -87,7 +89,8 @@ func StartRequests() {
 		Id: -1,
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+		g.Log().Ctx(ctx).Printf(`%+v`, err)
+		return
 	}
 	g.Log().Ctx(ctx).Println("delete:", -1)
 

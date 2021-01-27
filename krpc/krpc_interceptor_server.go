@@ -5,7 +5,7 @@ import (
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gutil"
 	"github.com/gogf/gf/util/gvalid"
-	"github.com/gogf/katyusha/krpc/internal/tracing"
+	"github.com/gogf/katyusha/krpc/internal/grpctracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -63,7 +63,7 @@ func (s *krpcServer) UnaryValidate(ctx context.Context, req interface{}, info *g
 
 // UnaryTracing returns a grpc.UnaryServerInterceptor suitable for use in a grpc.NewServer call.
 func (s *krpcServer) UnaryTracing(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	return tracing.UnaryServerInterceptor(ctx, req, info, handler)
+	return grpctracing.UnaryServerInterceptor(ctx, req, info, handler)
 }
 
 // StreamTracing returns a grpc.StreamServerInterceptor suitable for use in a grpc.NewServer call.
@@ -72,5 +72,5 @@ func (s *krpcServer) StreamTracing(
 	ss grpc.ServerStream,
 	info *grpc.StreamServerInfo,
 	handler grpc.StreamHandler) error {
-	return tracing.StreamServerInterceptor(srv, ss, info, handler)
+	return grpctracing.StreamServerInterceptor(srv, ss, info, handler)
 }

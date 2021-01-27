@@ -3,7 +3,7 @@ package krpc
 import (
 	"context"
 	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/katyusha/krpc/internal/tracing"
+	"github.com/gogf/katyusha/krpc/internal/grpctracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/status"
 )
@@ -29,7 +29,7 @@ func (c *krpcClient) UnaryError(ctx context.Context, method string, req, reply i
 func (c *krpcClient) UnaryTracing(
 	ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-	return tracing.UnaryClientInterceptor(ctx, method, req, reply, cc, invoker, opts...)
+	return grpctracing.UnaryClientInterceptor(ctx, method, req, reply, cc, invoker, opts...)
 }
 
 // StreamTracing returns a grpc.StreamClientInterceptor suitable for use in a grpc.Dial call.
@@ -37,5 +37,5 @@ func (c *krpcClient) StreamTracing(
 	ctx context.Context, desc *grpc.StreamDesc,
 	cc *grpc.ClientConn, method string, streamer grpc.Streamer,
 	callOpts ...grpc.CallOption) (grpc.ClientStream, error) {
-	return tracing.StreamClientInterceptor(ctx, desc, cc, method, streamer, callOpts...)
+	return grpctracing.StreamClientInterceptor(ctx, desc, cc, method, streamer, callOpts...)
 }

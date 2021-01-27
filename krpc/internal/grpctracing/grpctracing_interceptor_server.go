@@ -1,10 +1,13 @@
-package tracing
+package grpctracing
 
 import (
 	"context"
 	"github.com/gogf/katyusha"
+	"github.com/gogf/katyusha/krpc/internal/grpcctx"
+	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -38,9 +41,17 @@ func UnaryServerInterceptor(
 	)
 	defer span.End()
 
-	messageReceived.Event(ctx, 1, req)
+	span.AddEvent("grpc.request", trace.WithAttributes(
+		label.Any(`grpc.metadata.incoming`, grpcctx.Ctx.IncomingMap(ctx)),
+		label.String(`grpc.request.message`, grpcutils.MarshalPbMessageToJsonString(req)),
+	))
 
-	resp, err := handler(ctx, req)
+	res, err := handler(ctx, req)
+
+	span.AddEvent("grpc.response", trace.WithAttributes(
+		label.String(`grpc.response.message`, grpcutils.MarshalPbMessageToJsonString(res)),
+	))
+
 	if err != nil {
 		s, _ := status.FromError(err)
 		span.SetStatus(codes.Error, s.Message())
@@ -48,10 +59,10 @@ func UnaryServerInterceptor(
 		messageSent.Event(ctx, 1, s.Proto())
 	} else {
 		span.SetAttributes(statusCodeAttr(grpcCodes.OK))
-		messageSent.Event(ctx, 1, resp)
+		messageSent.Event(ctx, 1, res)
 	}
 
-	return resp, err
+	return res, err
 }
 
 // StreamServerInterceptor returns a grpc.StreamServerInterceptor suitable

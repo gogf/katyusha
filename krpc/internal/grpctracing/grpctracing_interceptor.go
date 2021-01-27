@@ -1,6 +1,6 @@
 // opentelemetry-go-contrib/instrumentation/google.golang.org/grpc/otelgrpc/interceptor.go
 
-package tracing
+package grpctracing
 
 // gRPC tracing middleware
 // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/rpc.md
