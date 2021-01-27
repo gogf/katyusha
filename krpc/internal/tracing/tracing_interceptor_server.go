@@ -19,20 +19,19 @@ func UnaryServerInterceptor(
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (interface{}, error) {
+	tracer := newConfig(nil).TracerProvider.Tracer(
+		"github.com/gogf/katyusha/krpc.GrpcServer",
+		trace.WithInstrumentationVersion(katyusha.VERSION),
+	)
 	requestMetadata, _ := metadata.FromIncomingContext(ctx)
 	metadataCopy := requestMetadata.Copy()
 
 	entries, spanCtx := Extract(ctx, &metadataCopy)
 	ctx = baggage.ContextWithValues(ctx, entries...)
-
-	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcServer",
-		trace.WithInstrumentationVersion(katyusha.VERSION),
-	)
-
+	ctx = trace.ContextWithRemoteSpanContext(ctx, spanCtx)
 	name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx))
 	ctx, span := tracer.Start(
-		trace.ContextWithRemoteSpanContext(ctx, spanCtx),
+		ctx,
 		name,
 		trace.WithSpanKind(trace.SpanKindServer),
 		trace.WithAttributes(attr...),
@@ -62,22 +61,21 @@ func StreamServerInterceptor(
 	ss grpc.ServerStream,
 	info *grpc.StreamServerInfo,
 	handler grpc.StreamHandler) error {
-	ctx := ss.Context()
-
-	requestMetadata, _ := metadata.FromIncomingContext(ctx)
-	metadataCopy := requestMetadata.Copy()
-
-	entries, spanCtx := Extract(ctx, &metadataCopy)
-	ctx = baggage.ContextWithValues(ctx, entries...)
-
 	tracer := newConfig(nil).TracerProvider.Tracer(
 		"github.com/gogf/katyusha/krpc.GrpcServer",
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
 
+	ctx := ss.Context()
+	requestMetadata, _ := metadata.FromIncomingContext(ctx)
+	metadataCopy := requestMetadata.Copy()
+
+	entries, spanCtx := Extract(ctx, &metadataCopy)
+	ctx = baggage.ContextWithValues(ctx, entries...)
+	ctx = trace.ContextWithRemoteSpanContext(ctx, spanCtx)
 	name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx))
 	ctx, span := tracer.Start(
-		trace.ContextWithRemoteSpanContext(ctx, spanCtx),
+		ctx,
 		name,
 		trace.WithSpanKind(trace.SpanKindServer),
 		trace.WithAttributes(attr...),

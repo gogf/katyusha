@@ -1,4 +1,4 @@
-package krpc
+package grpcctx
 
 import (
 	"context"
@@ -8,7 +8,15 @@ import (
 	"google.golang.org/grpc/metadata"
 )
 
-func (c *krpcCtx) NewIngoing(ctx context.Context, data ...g.Map) context.Context {
+type (
+	grpcCtx struct{}
+)
+
+var (
+	Ctx = &grpcCtx{}
+)
+
+func (c *grpcCtx) NewIngoing(ctx context.Context, data ...g.Map) context.Context {
 	if len(data) > 0 {
 		ingoingMd := make(metadata.MD)
 		for key, value := range data[0] {
@@ -19,7 +27,7 @@ func (c *krpcCtx) NewIngoing(ctx context.Context, data ...g.Map) context.Context
 	return metadata.NewIncomingContext(ctx, nil)
 }
 
-func (c *krpcCtx) NewOutgoing(ctx context.Context, data ...g.Map) context.Context {
+func (c *grpcCtx) NewOutgoing(ctx context.Context, data ...g.Map) context.Context {
 	if len(data) > 0 {
 		outgoingMd := make(metadata.MD)
 		for key, value := range data[0] {
@@ -30,7 +38,7 @@ func (c *krpcCtx) NewOutgoing(ctx context.Context, data ...g.Map) context.Contex
 	return metadata.NewOutgoingContext(ctx, nil)
 }
 
-func (c *krpcCtx) IngoingToOutgoing(ctx context.Context, keys ...string) context.Context {
+func (c *grpcCtx) IngoingToOutgoing(ctx context.Context, keys ...string) context.Context {
 	ingoingMd, _ := metadata.FromIncomingContext(ctx)
 	if ingoingMd == nil {
 		return ctx
@@ -51,7 +59,7 @@ func (c *krpcCtx) IngoingToOutgoing(ctx context.Context, keys ...string) context
 	return metadata.NewOutgoingContext(ctx, outgoingMd)
 }
 
-func (c *krpcCtx) IngoingMap(ctx context.Context) *gmap.Map {
+func (c *grpcCtx) IngoingMap(ctx context.Context) *gmap.Map {
 	var (
 		data         = gmap.New()
 		ingoingMd, _ = metadata.FromIncomingContext(ctx)
@@ -66,7 +74,7 @@ func (c *krpcCtx) IngoingMap(ctx context.Context) *gmap.Map {
 	return data
 }
 
-func (c *krpcCtx) OutgoingMap(ctx context.Context) *gmap.Map {
+func (c *grpcCtx) OutgoingMap(ctx context.Context) *gmap.Map {
 	var (
 		data          = gmap.New()
 		outgoingMd, _ = metadata.FromOutgoingContext(ctx)
@@ -81,7 +89,7 @@ func (c *krpcCtx) OutgoingMap(ctx context.Context) *gmap.Map {
 	return data
 }
 
-func (c *krpcCtx) SetIngoing(ctx context.Context, data g.Map) context.Context {
+func (c *grpcCtx) SetIngoing(ctx context.Context, data g.Map) context.Context {
 	ingoingMd, _ := metadata.FromIncomingContext(ctx)
 	if ingoingMd == nil {
 		ingoingMd = make(metadata.MD)
@@ -92,7 +100,7 @@ func (c *krpcCtx) SetIngoing(ctx context.Context, data g.Map) context.Context {
 	return metadata.NewIncomingContext(ctx, ingoingMd)
 }
 
-func (c *krpcCtx) SetOutgoing(ctx context.Context, data g.Map) context.Context {
+func (c *grpcCtx) SetOutgoing(ctx context.Context, data g.Map) context.Context {
 	outgoingMd, _ := metadata.FromOutgoingContext(ctx)
 	if outgoingMd == nil {
 		outgoingMd = make(metadata.MD)

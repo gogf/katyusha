@@ -1,7 +1,10 @@
 package krpc
 
+import (
+	"github.com/gogf/katyusha/krpc/internal/grpcctx"
+)
+
 type (
-	krpcCtx    struct{}
 	krpcClient struct{}
 	krpcServer struct{}
 )
@@ -12,7 +15,7 @@ const (
 )
 
 var (
-	Ctx    = new(krpcCtx)  // Ctx manages the context feature.
+	Ctx    = grpcctx.Ctx   // Ctx manages the context feature.
 	Client = &krpcClient{} // Client manages the client features.
 	Server = &krpcServer{} // Server manages the server feature.
 )

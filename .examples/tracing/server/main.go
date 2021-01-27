@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/gogf/gcache-adapter/adapter"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/katyusha/examples/tracing/protobuf/user"
+	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
 	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
@@ -97,6 +97,8 @@ func main() {
 	}
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
+			krpc.Server.UnaryError,
+			krpc.Server.UnaryRecover,
 			krpc.Server.UnaryTracing,
 			krpc.Server.UnaryValidate,
 		),

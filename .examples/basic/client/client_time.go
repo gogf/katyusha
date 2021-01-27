@@ -2,14 +2,14 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/katyusha/examples/protocol"
+	"github.com/gogf/katyusha/.examples/basic/protocol"
 	"github.com/gogf/katyusha/krpc"
 	"golang.org/x/net/context"
 	"time"
 )
 
 func main() {
-	conn, err := krpc.Client.NewGrpcClientConn("none")
+	conn, err := krpc.Client.NewGrpcClientConn("time")
 	if err != nil {
 		g.Log().Fatal(err)
 	}

@@ -3,10 +3,12 @@ package krpc
 import (
 	"context"
 	"github.com/gogf/gf/errors/gerror"
+	"github.com/gogf/gf/util/gutil"
 	"github.com/gogf/gf/util/gvalid"
 	"github.com/gogf/katyusha/krpc/internal/tracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // ChainUnary returns a ServerOption that specifies the chained interceptor
@@ -23,6 +25,28 @@ func (s *krpcServer) ChainUnary(interceptors ...grpc.UnaryServerInterceptor) grp
 // All stream interceptors added by this method will be chained.
 func (s *krpcServer) ChainStream(interceptors ...grpc.StreamServerInterceptor) grpc.ServerOption {
 	return grpc.ChainStreamInterceptor(interceptors...)
+}
+
+// UnaryError is the default unary interceptor for error converting from custom error to grpc error.
+func (s *krpcServer) UnaryError(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	res, err := handler(ctx, req)
+	if err != nil {
+		code := gerror.Code(err)
+		if code != -1 {
+			err = status.Error(codes.Code(code), err.Error())
+		}
+	}
+	return res, err
+}
+
+// UnaryRecover is the first interceptor that keep server not down from panics.
+func (s *krpcServer) UnaryRecover(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (res interface{}, err error) {
+	gutil.TryCatch(func() {
+		res, err = handler(ctx, req)
+	}, func(exception error) {
+		err = gerror.WrapCode(int(codes.Internal), err, "panic recovered")
+	})
+	return
 }
 
 // Common validation unary interpreter.

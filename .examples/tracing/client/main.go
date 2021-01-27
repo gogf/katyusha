@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/katyusha/examples/tracing/protobuf/user"
+	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
 	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
 	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
@@ -42,6 +42,7 @@ func StartRequests() {
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
 		grpc.WithChainUnaryInterceptor(
+			krpc.Client.UnaryError,
 			krpc.Client.UnaryTracing,
 		),
 	)
@@ -79,7 +80,16 @@ func StartRequests() {
 	if err != nil {
 		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
 	}
-	g.Log().Ctx(ctx).Println("delete:", "ok")
+	g.Log().Ctx(ctx).Println("delete:", insertRes.Id)
+
+	// Delete with error.
+	_, err = client.Delete(ctx, &user.DeleteReq{
+		Id: -1,
+	})
+	if err != nil {
+		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+	}
+	g.Log().Ctx(ctx).Println("delete:", -1)
 
 }
 

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/gogf/katyusha/examples/protocol"
-	"github.com/gogf/katyusha/examples/service"
+	"github.com/gogf/katyusha/.examples/basic/protocol"
+	"github.com/gogf/katyusha/.examples/basic/service"
 	"github.com/gogf/katyusha/krpc"
 )
 

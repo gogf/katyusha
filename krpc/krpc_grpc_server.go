@@ -44,19 +44,19 @@ func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	if config.Logger == nil {
 		config.Logger = glog.New()
 	}
-	server := &GrpcServer{
+	grpcServer := &GrpcServer{
 		Logger: config.Logger,
 		config: config,
 	}
-	server.config.Options = append([]grpc.ServerOption{
+	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			server.UnaryLogger,
-			server.UnaryError,
-			server.UnaryRecover,
+			grpcServer.UnaryLogger,
+			s.UnaryError,
+			s.UnaryRecover,
 		),
-	}, server.config.Options...)
-	server.Server = grpc.NewServer(server.config.Options...)
-	return server
+	}, grpcServer.config.Options...)
+	grpcServer.Server = grpc.NewServer(grpcServer.config.Options...)
+	return grpcServer
 }
 
 // Service binds service list to current server.

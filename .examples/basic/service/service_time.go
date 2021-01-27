@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/os/gtime"
-	"github.com/gogf/katyusha/examples/protocol"
+	"github.com/gogf/katyusha/.examples/basic/protocol"
 	"golang.org/x/net/context"
 )
 

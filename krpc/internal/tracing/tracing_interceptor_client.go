@@ -15,12 +15,12 @@ import (
 // for use in a grpc.Dial call.
 func UnaryClientInterceptor(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, callOpts ...grpc.CallOption) error {
-	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
-	metadataCopy := requestMetadata.Copy()
 	tracer := newConfig(nil).TracerProvider.Tracer(
 		"github.com/gogf/katyusha/krpc.GrpcClient",
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
+	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
+	metadataCopy := requestMetadata.Copy()
 	name, attr := spanInfo(method, cc.Target())
 	var span trace.Span
 	ctx, span = tracer.Start(
@@ -34,7 +34,6 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	Inject(ctx, &metadataCopy)
 
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
-
 	messageSent.Event(ctx, 1, req)
 
 	err := invoker(ctx, method, req, reply, cc, callOpts...)

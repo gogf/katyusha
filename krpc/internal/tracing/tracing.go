@@ -36,6 +36,10 @@ func newConfig(opts []Option) *config {
 		Propagators:    otel.GetTextMapPropagator(),
 		TracerProvider: otel.GetTracerProvider(),
 	}
+	c.Propagators = propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	)
 	for _, o := range opts {
 		o.Apply(c)
 	}
