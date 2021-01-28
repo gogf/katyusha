@@ -3,7 +3,7 @@ module github.com/gogf/katyusha
 go 1.11
 
 require (
-	github.com/gogf/gf v1.15.2
+	github.com/gogf/gf v1.15.3
 	github.com/golang/protobuf v1.4.3
 	github.com/prometheus/client_golang v1.5.1
 	go.etcd.io/etcd/api/v3 v3.5.0-pre
