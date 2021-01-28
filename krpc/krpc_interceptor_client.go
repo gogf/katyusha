@@ -25,14 +25,14 @@ func (c *krpcClient) UnaryError(ctx context.Context, method string, req, reply i
 	return err
 }
 
-// UnaryTracing returns a grpc.UnaryClientInterceptor suitable for use in a grpc.Dial call.
+// UnaryTracing is an unary interceptor for adding tracing feature for gRPC client using OpenTelemetry.
 func (c *krpcClient) UnaryTracing(
 	ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return grpctracing.UnaryClientInterceptor(ctx, method, req, reply, cc, invoker, opts...)
 }
 
-// StreamTracing returns a grpc.StreamClientInterceptor suitable for use in a grpc.Dial call.
+// StreamTracing is a stream interceptor for adding tracing feature for gRPC client using OpenTelemetry.
 func (c *krpcClient) StreamTracing(
 	ctx context.Context, desc *grpc.StreamDesc,
 	cc *grpc.ClientConn, method string, streamer grpc.Streamer,

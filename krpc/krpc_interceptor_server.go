@@ -61,16 +61,12 @@ func (s *krpcServer) UnaryValidate(ctx context.Context, req interface{}, info *g
 	return handler(ctx, req)
 }
 
-// UnaryTracing returns a grpc.UnaryServerInterceptor suitable for use in a grpc.NewServer call.
+// UnaryTracing is an unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
 func (s *krpcServer) UnaryTracing(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return grpctracing.UnaryServerInterceptor(ctx, req, info, handler)
 }
 
-// StreamTracing returns a grpc.StreamServerInterceptor suitable for use in a grpc.NewServer call.
-func (s *krpcServer) StreamTracing(
-	srv interface{},
-	ss grpc.ServerStream,
-	info *grpc.StreamServerInfo,
-	handler grpc.StreamHandler) error {
+// StreamTracing is a stream unary interceptor for adding tracing feature for gRPC server using OpenTelemetry.
+func (s *krpcServer) StreamTracing(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	return grpctracing.StreamServerInterceptor(srv, ss, info, handler)
 }
