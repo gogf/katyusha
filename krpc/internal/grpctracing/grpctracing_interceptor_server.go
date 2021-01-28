@@ -24,7 +24,7 @@ func UnaryServerInterceptor(
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (interface{}, error) {
 	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcServer.Unary",
+		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
 	requestMetadata, _ := metadata.FromIncomingContext(ctx)
@@ -45,6 +45,7 @@ func UnaryServerInterceptor(
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
+		label.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
 		label.Any(tracingEventGrpcMetadataIncoming, grpcctx.Ctx.IncomingMap(ctx)),
 		label.String(
 			tracingEventGrpcRequestMessage,
@@ -84,7 +85,7 @@ func StreamServerInterceptor(
 	info *grpc.StreamServerInfo,
 	handler grpc.StreamHandler) error {
 	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcServer.Stream",
+		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
 

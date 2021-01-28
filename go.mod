@@ -3,8 +3,9 @@ module github.com/gogf/katyusha
 go 1.11
 
 require (
-	github.com/gogf/gf v1.15.3
+	github.com/gogf/gf v1.15.3-0.20210128055123-2734903886a7
 	github.com/golang/protobuf v1.4.3
+	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/prometheus/client_golang v1.5.1
 	go.etcd.io/etcd/api/v3 v3.5.0-pre
 	go.etcd.io/etcd/client/v3 v3.0.0-20201118182908-c11ddc65cea1

@@ -20,7 +20,7 @@ import (
 func UnaryClientInterceptor(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, callOpts ...grpc.CallOption) error {
 	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcClient.Unary",
+		tracingInstrumentGrpcClient,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
 	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
@@ -42,6 +42,7 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
+		label.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
 		label.Any(tracingEventGrpcMetadataOutgoing, grpcctx.Ctx.OutgoingMap(ctx)),
 		label.String(
 			tracingEventGrpcRequestMessage,
@@ -79,7 +80,7 @@ func StreamClientInterceptor(
 	cc *grpc.ClientConn, method string, streamer grpc.Streamer,
 	callOpts ...grpc.CallOption) (grpc.ClientStream, error) {
 	tracer := newConfig(nil).TracerProvider.Tracer(
-		"github.com/gogf/katyusha/krpc.GrpcClient.Stream",
+		tracingInstrumentGrpcClient,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
 	requestMetadata, _ := metadata.FromOutgoingContext(ctx)
