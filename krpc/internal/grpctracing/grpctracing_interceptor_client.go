@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/katyusha"
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
 	"go.opentelemetry.io/otel/trace"
@@ -19,7 +20,7 @@ import (
 // for use in a grpc.Dial call.
 func UnaryClientInterceptor(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, callOpts ...grpc.CallOption) error {
-	tracer := newConfig(nil).TracerProvider.Tracer(
+	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcClient,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
@@ -79,7 +80,7 @@ func StreamClientInterceptor(
 	ctx context.Context, desc *grpc.StreamDesc,
 	cc *grpc.ClientConn, method string, streamer grpc.Streamer,
 	callOpts ...grpc.CallOption) (grpc.ClientStream, error) {
-	tracer := newConfig(nil).TracerProvider.Tracer(
+	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcClient,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)

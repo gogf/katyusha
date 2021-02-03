@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/katyusha"
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/label"
@@ -23,7 +24,7 @@ func UnaryServerInterceptor(
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler) (interface{}, error) {
-	tracer := newConfig(nil).TracerProvider.Tracer(
+	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
@@ -84,7 +85,7 @@ func StreamServerInterceptor(
 	ss grpc.ServerStream,
 	info *grpc.StreamServerInfo,
 	handler grpc.StreamHandler) error {
-	tracer := newConfig(nil).TracerProvider.Tracer(
+	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
 	)
