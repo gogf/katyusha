@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -46,9 +46,9 @@ func UnaryServerInterceptor(
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
-		label.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
-		label.Any(tracingEventGrpcMetadataIncoming, grpcctx.Ctx.IncomingMap(ctx)),
-		label.String(
+		attribute.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
+		attribute.Any(tracingEventGrpcMetadataIncoming, grpcctx.Ctx.IncomingMap(ctx)),
+		attribute.String(
 			tracingEventGrpcRequestMessage,
 			grpcutils.MarshalMessageToJsonStringForTracing(
 				req, "Request", tracingMaxContentLogSize,
@@ -59,7 +59,7 @@ func UnaryServerInterceptor(
 	res, err := handler(ctx, req)
 
 	span.AddEvent(tracingEventGrpcResponse, trace.WithAttributes(
-		label.String(
+		attribute.String(
 			tracingEventGrpcResponseMessage,
 			grpcutils.MarshalMessageToJsonStringForTracing(
 				res, "Response", tracingMaxContentLogSize,

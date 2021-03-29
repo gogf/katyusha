@@ -8,7 +8,7 @@ import (
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/label"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -43,9 +43,9 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
-		label.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
-		label.Any(tracingEventGrpcMetadataOutgoing, grpcctx.Ctx.OutgoingMap(ctx)),
-		label.String(
+		attribute.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
+		attribute.Any(tracingEventGrpcMetadataOutgoing, grpcctx.Ctx.OutgoingMap(ctx)),
+		attribute.String(
 			tracingEventGrpcRequestMessage,
 			grpcutils.MarshalMessageToJsonStringForTracing(
 				req, "Request", tracingMaxContentLogSize,
@@ -56,7 +56,7 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	err := invoker(ctx, method, req, reply, cc, callOpts...)
 
 	span.AddEvent(tracingEventGrpcResponse, trace.WithAttributes(
-		label.String(
+		attribute.String(
 			tracingEventGrpcResponseMessage,
 			grpcutils.MarshalMessageToJsonStringForTracing(
 				reply, "Response", tracingMaxContentLogSize,
