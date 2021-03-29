@@ -24,7 +24,7 @@ type GrpcServerConfig struct {
 // NewGrpcServerConfig creates and returns a ServerConfig object with default configurations.
 // Note that, do not define this default configuration to local package variable, as there are
 // some pointer attributes that may be shared in different servers.
-func (s *krpcServer) NewGrpcServerConfig() *GrpcServerConfig {
+func (s krpcServer) NewGrpcServerConfig() *GrpcServerConfig {
 	config := &GrpcServerConfig{
 		Address:          ":8000",
 		Logger:           glog.New(),

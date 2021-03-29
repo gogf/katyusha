@@ -7,9 +7,9 @@ import (
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -31,7 +31,7 @@ func UnaryServerInterceptor(
 	requestMetadata, _ := metadata.FromIncomingContext(ctx)
 	metadataCopy := requestMetadata.Copy()
 
-	entries, spanCtx := Extract(ctx, &metadataCopy)
+	entries, spanCtx := Extract(ctx, metadataCopy)
 	ctx = baggage.ContextWithValues(ctx, entries...)
 	ctx = trace.ContextWithRemoteSpanContext(ctx, spanCtx)
 	name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx))
@@ -93,7 +93,7 @@ func StreamServerInterceptor(
 	ctx := ss.Context()
 	requestMetadata, _ := metadata.FromIncomingContext(ctx)
 	metadataCopy := requestMetadata.Copy()
-	entries, spanCtx := Extract(ctx, &metadataCopy)
+	entries, spanCtx := Extract(ctx, metadataCopy)
 	ctx = baggage.ContextWithValues(ctx, entries...)
 	ctx = trace.ContextWithRemoteSpanContext(ctx, spanCtx)
 	name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx))

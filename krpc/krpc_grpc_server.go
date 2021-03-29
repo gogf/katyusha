@@ -28,7 +28,7 @@ type GrpcServer struct {
 }
 
 // NewGrpcServer creates and returns a grpc server.
-func (s *krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
+func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	var config *GrpcServerConfig
 	if len(conf) > 0 {
 		config = conf[0]

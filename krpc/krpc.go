@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	Ctx    = grpcctx.Ctx   // Ctx manages the context feature.
-	Client = &krpcClient{} // Client manages the client features.
-	Server = &krpcServer{} // Server manages the server feature.
+	Ctx    = grpcctx.Ctx  // Ctx manages the context feature.
+	Client = krpcClient{} // Client manages the client features.
+	Server = krpcServer{} // Server manages the server feature.
 )

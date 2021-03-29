@@ -10,7 +10,7 @@ import (
 
 // UnaryError handles the error types converting between grpc and gerror.
 // Note that, the minus error code is only used locally which will not be sent to other side.
-func (c *krpcClient) UnaryError(ctx context.Context, method string, req, reply interface{},
+func (c krpcClient) UnaryError(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	err := invoker(ctx, method, req, reply, cc, opts...)
 	if err != nil {
@@ -26,14 +26,14 @@ func (c *krpcClient) UnaryError(ctx context.Context, method string, req, reply i
 }
 
 // UnaryTracing is an unary interceptor for adding tracing feature for gRPC client using OpenTelemetry.
-func (c *krpcClient) UnaryTracing(
+func (c krpcClient) UnaryTracing(
 	ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return grpctracing.UnaryClientInterceptor(ctx, method, req, reply, cc, invoker, opts...)
 }
 
 // StreamTracing is a stream interceptor for adding tracing feature for gRPC client using OpenTelemetry.
-func (c *krpcClient) StreamTracing(
+func (c krpcClient) StreamTracing(
 	ctx context.Context, desc *grpc.StreamDesc,
 	cc *grpc.ClientConn, method string, streamer grpc.Streamer,
 	callOpts ...grpc.CallOption) (grpc.ClientStream, error) {

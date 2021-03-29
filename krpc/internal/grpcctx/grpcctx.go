@@ -13,10 +13,10 @@ type (
 )
 
 var (
-	Ctx = &grpcCtx{}
+	Ctx = grpcCtx{}
 )
 
-func (c *grpcCtx) NewIncoming(ctx context.Context, data ...g.Map) context.Context {
+func (c grpcCtx) NewIncoming(ctx context.Context, data ...g.Map) context.Context {
 	if len(data) > 0 {
 		incomingMd := make(metadata.MD)
 		for key, value := range data[0] {
@@ -27,7 +27,7 @@ func (c *grpcCtx) NewIncoming(ctx context.Context, data ...g.Map) context.Contex
 	return metadata.NewIncomingContext(ctx, nil)
 }
 
-func (c *grpcCtx) NewOutgoing(ctx context.Context, data ...g.Map) context.Context {
+func (c grpcCtx) NewOutgoing(ctx context.Context, data ...g.Map) context.Context {
 	if len(data) > 0 {
 		outgoingMd := make(metadata.MD)
 		for key, value := range data[0] {
@@ -38,7 +38,7 @@ func (c *grpcCtx) NewOutgoing(ctx context.Context, data ...g.Map) context.Contex
 	return metadata.NewOutgoingContext(ctx, nil)
 }
 
-func (c *grpcCtx) IncomingToOutgoing(ctx context.Context, keys ...string) context.Context {
+func (c grpcCtx) IncomingToOutgoing(ctx context.Context, keys ...string) context.Context {
 	incomingMd, _ := metadata.FromIncomingContext(ctx)
 	if incomingMd == nil {
 		return ctx
@@ -59,7 +59,7 @@ func (c *grpcCtx) IncomingToOutgoing(ctx context.Context, keys ...string) contex
 	return metadata.NewOutgoingContext(ctx, outgoingMd)
 }
 
-func (c *grpcCtx) IncomingMap(ctx context.Context) *gmap.Map {
+func (c grpcCtx) IncomingMap(ctx context.Context) *gmap.Map {
 	var (
 		data          = gmap.New()
 		incomingMd, _ = metadata.FromIncomingContext(ctx)
@@ -74,7 +74,7 @@ func (c *grpcCtx) IncomingMap(ctx context.Context) *gmap.Map {
 	return data
 }
 
-func (c *grpcCtx) OutgoingMap(ctx context.Context) *gmap.Map {
+func (c grpcCtx) OutgoingMap(ctx context.Context) *gmap.Map {
 	var (
 		data          = gmap.New()
 		outgoingMd, _ = metadata.FromOutgoingContext(ctx)
@@ -89,7 +89,7 @@ func (c *grpcCtx) OutgoingMap(ctx context.Context) *gmap.Map {
 	return data
 }
 
-func (c *grpcCtx) SetIncoming(ctx context.Context, data g.Map) context.Context {
+func (c grpcCtx) SetIncoming(ctx context.Context, data g.Map) context.Context {
 	incomingMd, _ := metadata.FromIncomingContext(ctx)
 	if incomingMd == nil {
 		incomingMd = make(metadata.MD)
@@ -100,7 +100,7 @@ func (c *grpcCtx) SetIncoming(ctx context.Context, data g.Map) context.Context {
 	return metadata.NewIncomingContext(ctx, incomingMd)
 }
 
-func (c *grpcCtx) SetOutgoing(ctx context.Context, data g.Map) context.Context {
+func (c grpcCtx) SetOutgoing(ctx context.Context, data g.Map) context.Context {
 	outgoingMd, _ := metadata.FromOutgoingContext(ctx)
 	if outgoingMd == nil {
 		outgoingMd = make(metadata.MD)

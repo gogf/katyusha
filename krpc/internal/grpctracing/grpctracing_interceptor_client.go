@@ -7,8 +7,8 @@ import (
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -36,7 +36,7 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	)
 	defer span.End()
 
-	Inject(ctx, &metadataCopy)
+	Inject(ctx, metadataCopy)
 
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
 
@@ -96,7 +96,7 @@ func StreamClientInterceptor(
 		trace.WithAttributes(attr...),
 	)
 
-	Inject(ctx, &metadataCopy)
+	Inject(ctx, metadataCopy)
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
 
 	span.SetAttributes(gtrace.CommonLabels()...)
