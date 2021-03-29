@@ -16,7 +16,5 @@ require (
 replace (
 	go.etcd.io/etcd/api/v3 => go.etcd.io/etcd/api/v3 v3.0.0-20201103155942-6e800b9b0161
 	go.etcd.io/etcd/pkg/v3 => go.etcd.io/etcd/pkg/v3 v3.0.0-20201103155942-6e800b9b0161
-	go.opentelemetry.io/otel => go.opentelemetry.io/otel v0.18.0
-	go.opentelemetry.io/otel/trace => go.opentelemetry.io/otel/trace v0.18.0
 	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 )
