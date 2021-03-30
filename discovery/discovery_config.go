@@ -2,14 +2,25 @@ package discovery
 
 import (
 	"encoding/json"
+	"github.com/gogf/gf/container/gtype"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/genv"
 	"github.com/gogf/gf/text/gstr"
 )
 
-func init() {
+var (
+	// initializedFromConfig is used for initialization for discovery.
+	initializedFromConfig = gtype.NewBool()
+)
+
+// InitDiscoveryFromConfig automatically checks and initializes discovery feature
+// from configuration.
+func InitDiscoveryFromConfig() error {
+	if !initializedFromConfig.Cas(false, true) {
+		return nil
+	}
 	if !g.Cfg().Available() {
-		return
+		return nil
 	}
 	// Configuration: discovery
 	configDiscovery := g.Cfg().GetVar(configNodeNameDiscovery)
@@ -20,15 +31,19 @@ func init() {
 		)
 		// Discovery.
 		if err := configDiscovery.Struct(&config); err != nil {
-			g.Log().Error(err)
+			return err
 		}
-		discoveryConfigToEnvironment(config)
+		if err := discoveryConfigToEnvironment(config); err != nil {
+			return err
+		}
 
 		// Service.
 		if err := configDiscovery.Struct(&service); err != nil {
-			g.Log().Error(err)
+			return err
 		}
-		serviceConfigToEnvironment(service)
+		if err := serviceConfigToEnvironment(service); err != nil {
+			return err
+		}
 	}
 	// Configuration: service
 	configService := g.Cfg().GetVar(configNodeNameService)
@@ -38,66 +53,94 @@ func init() {
 				services []*Service
 			)
 			if err := configService.Structs(&services); err != nil {
-				g.Log().Error(err)
+				return err
 			}
 			for _, service := range services {
-				serviceConfigToEnvironment(service)
+				if err := serviceConfigToEnvironment(service); err != nil {
+					return err
+				}
 			}
 		} else {
 			var (
 				service *Service
 			)
 			if err := configService.Struct(&service); err != nil {
-				g.Log().Error(err)
+				return err
 			}
-			serviceConfigToEnvironment(service)
+			if err := serviceConfigToEnvironment(service); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // SetConfig sets the discovery configuration using Config.
-func SetConfig(config *Config) {
-	discoveryConfigToEnvironment(config)
+func SetConfig(config *Config) error {
+	if err := discoveryConfigToEnvironment(config); err != nil {
+		return err
+	}
+	return nil
 }
 
 // discoveryConfigToEnvironment sets the discovery environment value with Config object.
-func discoveryConfigToEnvironment(config *Config) {
+func discoveryConfigToEnvironment(config *Config) error {
 	if config == nil {
-		return
+		return nil
 	}
 	if len(config.Endpoints) > 0 {
-		genv.Set(EnvKey.Endpoints, gstr.Join(config.Endpoints, ","))
+		if err := genv.Set(EnvKey.Endpoints, gstr.Join(config.Endpoints, ",")); err != nil {
+			return err
+		}
 	}
 	if config.KeepAlive > 0 {
-		genv.Set(EnvKey.KeepAlive, config.KeepAlive.String())
+		if err := genv.Set(EnvKey.KeepAlive, config.KeepAlive.String()); err != nil {
+			return err
+		}
 	}
 	if config.PrefixRoot != "" {
-		genv.Set(EnvKey.PrefixRoot, config.PrefixRoot)
+		if err := genv.Set(EnvKey.PrefixRoot, config.PrefixRoot); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // serviceConfigToEnvironment sets the service environment value with Service object.
-func serviceConfigToEnvironment(service *Service) {
+func serviceConfigToEnvironment(service *Service) error {
 	if service == nil {
-		return
+		return nil
 	}
 	if service.AppId != "" {
-		genv.Set(EnvKey.AppId, service.AppId)
+		if err := genv.Set(EnvKey.AppId, service.AppId); err != nil {
+			return err
+		}
 	}
 	if service.Address != "" {
-		genv.Set(EnvKey.Address, service.Address)
+		if err := genv.Set(EnvKey.Address, service.Address); err != nil {
+			return err
+		}
 	}
 	if service.Version != "" {
-		genv.Set(EnvKey.Version, service.Version)
+		if err := genv.Set(EnvKey.Version, service.Version); err != nil {
+			return err
+		}
 	}
 	if service.Group != "" {
-		genv.Set(EnvKey.Group, service.Group)
+		if err := genv.Set(EnvKey.Group, service.Group); err != nil {
+			return err
+		}
 	}
 	if service.Deployment != "" {
-		genv.Set(EnvKey.Deployment, service.Deployment)
+		if err := genv.Set(EnvKey.Deployment, service.Deployment); err != nil {
+			return err
+		}
 	}
 	if len(service.Metadata) > 0 {
 		b, _ := json.Marshal(service.Metadata)
-		genv.Set(EnvKey.Metadata, string(b))
+		if err := genv.Set(EnvKey.Metadata, string(b)); err != nil {
+			return err
+		}
 	}
+	return nil
 }

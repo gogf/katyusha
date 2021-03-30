@@ -12,6 +12,6 @@ type Echo struct{}
 
 func (s *Echo) Say(ctx context.Context, r *protocol.SayReq) (*protocol.SayRes, error) {
 	g.Log().Println("Received:", r.Content)
-	text := fmt.Sprintf(`%s: > %s`, gcmd.GetOpt("node"), r.Content)
+	text := fmt.Sprintf(`%s: > %s`, gcmd.GetOpt("node", "default"), r.Content)
 	return &protocol.SayRes{Content: text}, nil
 }

@@ -6,9 +6,9 @@ import (
 	"github.com/gogf/katyusha/krpc"
 )
 
-// go run server_echo.go -node node1 -port 8000
-// go run server_echo.go -node node2 -port 8001
-// go run server_echo.go -node node3 -port 8002
+// go run server_echo.go -node node1
+// go run server_echo.go -node node2
+// go run server_echo.go -node node3
 func main() {
 	s := krpc.Server.NewGrpcServer()
 	protocol.RegisterEchoServer(s.Server, new(service.Echo))

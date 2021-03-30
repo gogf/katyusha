@@ -38,6 +38,8 @@ github.com/go-stack/stack v1.8.0/go.mod h1:v0f6uXyyMGvRgIKkXu+yp6POWl0qKG85gN/me
 github.com/godbus/dbus/v5 v5.0.3/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/gogf/gf v1.15.5-0.20210329081214-ae5ecb5bfa92 h1:+kthJxPpjjbNt/cz31TuCnjddYrEeIEljkJlGBntu1E=
 github.com/gogf/gf v1.15.5-0.20210329081214-ae5ecb5bfa92/go.mod h1:/oSIZowMfDSFhZwji2NGe4bRDeWWzIevVANGySWZXM8=
+github.com/gogf/gf v1.15.5-0.20210330054308-78027d2ec6ec h1:N4aKEsFmBWj7DbDWidci5vfeOHMLw1Nbb794SLuhI+E=
+github.com/gogf/gf v1.15.5-0.20210330054308-78027d2ec6ec/go.mod h1:/oSIZowMfDSFhZwji2NGe4bRDeWWzIevVANGySWZXM8=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.1 h1:DqDEcV5aeaTmdFBePNpYsp3FlcVH/2ISVVM9Qf8PSls=
 github.com/gogo/protobuf v1.3.1/go.mod h1:SlYgWuQ5SjCEi6WLHjHCa1yvBfUnHcTbrrZtXPKa29o=

@@ -85,12 +85,15 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
+	if err := discovery.InitDiscoveryFromConfig(); err != nil {
+		s.Logger.Fatal(err)
+	}
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.Logger.Fatal(err)
 	}
 	if len(s.services) == 0 {
-		appId := gcmd.GetWithEnv(discovery.EnvKey.AppId).String()
+		appId := gcmd.GetOptWithEnv(discovery.EnvKey.AppId).String()
 		if appId != "" {
 			// Automatically creating service if app id can be retrieved
 			// from environment or command-line.
@@ -144,7 +147,7 @@ func (s *GrpcServer) Run() {
 			syscall.SIGABRT:
 			s.Logger.Printf("signal received: %s, gracefully shutting down", sig.String())
 			for _, service := range s.services {
-				discovery.Unregister(service)
+				_ = discovery.Unregister(service)
 			}
 			time.Sleep(time.Second)
 			s.Stop()

@@ -16,6 +16,9 @@ var (
 
 // NewGrpcConn creates and returns a client connection for given service `appId`.
 func (c krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	if err := discovery.InitDiscoveryFromConfig(); err != nil {
+		return nil, err
+	}
 	grpcClientOptions := make([]grpc.DialOption, 0)
 	grpcClientOptions = append(grpcClientOptions, DefaultGrpcClientConnOptions...)
 	if len(opts) > 0 {
