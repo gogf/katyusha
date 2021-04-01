@@ -6,6 +6,12 @@
 // 	protoc        v3.11.4
 // source: time.proto
 
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/katyusha.
+
 package protocol
 
 import (

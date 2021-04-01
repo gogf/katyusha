@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/katyusha.
+
 // opentelemetry-go-contrib/instrumentation/google.golang.org/grpc/otelgrpc/interceptor.go
 
 package grpctracing
@@ -49,7 +55,7 @@ func (s *metadataSupplier) Set(key string, value string) {
 func (s *metadataSupplier) Keys() []string {
 	var (
 		index = 0
-		keys = make([]string, s.metadata.Len())
+		keys  = make([]string, s.metadata.Len())
 	)
 	for k, _ := range s.metadata {
 		keys[index] = k

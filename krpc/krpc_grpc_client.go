@@ -1,3 +1,9 @@
+// Copyright GoFrame Author(https://goframe.org). All Rights Reserved.
+//
+// This Source Code Form is subject to the terms of the MIT License.
+// If a copy of the MIT was not distributed with this file,
+// You can obtain one at https://github.com/gogf/katyusha.
+
 package krpc
 
 import (
@@ -6,13 +12,13 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	// DefaultGrpcClientConnOptions is the default options for creating grpc client connection.
-	DefaultGrpcClientConnOptions = []grpc.DialOption{
+// DefaultGrpcDialOptions returns the default options for creating grpc client connection.
+func (c krpcClient) DefaultGrpcDialOptions() []grpc.DialOption {
+	return []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithBalancerName(balancer.RoundRobin),
 	}
-)
+}
 
 // NewGrpcConn creates and returns a client connection for given service `appId`.
 func (c krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
@@ -20,7 +26,7 @@ func (c krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*g
 		return nil, err
 	}
 	grpcClientOptions := make([]grpc.DialOption, 0)
-	grpcClientOptions = append(grpcClientOptions, DefaultGrpcClientConnOptions...)
+	grpcClientOptions = append(grpcClientOptions, c.DefaultGrpcDialOptions()...)
 	if len(opts) > 0 {
 		grpcClientOptions = append(grpcClientOptions, opts...)
 	}
