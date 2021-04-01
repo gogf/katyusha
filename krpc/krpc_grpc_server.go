@@ -130,11 +130,9 @@ func (s *GrpcServer) Run() {
 		}
 		// Check any application identities bound with server.
 		if len(s.config.AppId) > 0 {
-			for _, appId := range s.config.AppId {
-				s.Service(&discovery.Service{
-					AppId: appId,
-				})
-			}
+			s.Service(&discovery.Service{
+				AppId: s.config.AppId,
+			})
 		}
 	}
 	// Start listening.

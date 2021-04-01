@@ -2,7 +2,6 @@
     endpoints = ["127.0.0.1:2379"]
 
 [grpcserver]
-    appId            = ["echo"]
     logPath          = "./log"
     logStdout        = true
     errorLogEnabled  = true

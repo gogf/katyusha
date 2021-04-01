@@ -8,22 +8,18 @@ package main
 
 import (
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/katyusha/.examples/basic/protocol"
-	"github.com/gogf/katyusha/krpc"
+	"github.com/gogf/katyusha/.examples/basic/protobuf"
 	"golang.org/x/net/context"
 	"time"
 )
 
 func main() {
-	conn, err := krpc.Client.NewGrpcClientConn("time")
+	client, err := protobuf.NewClient()
 	if err != nil {
 		g.Log().Fatal(err)
 	}
-	defer conn.Close()
-	client := protocol.NewTimeClient(conn)
-
 	for i := 0; i < 500; i++ {
-		res, err := client.Now(context.Background(), &protocol.NowReq{})
+		res, err := client.TimeClient.Now(context.Background(), &protobuf.NowReq{})
 		if err != nil {
 			g.Log().Error(err)
 			time.Sleep(time.Second)

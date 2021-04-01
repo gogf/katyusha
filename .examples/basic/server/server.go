@@ -7,16 +7,19 @@
 package main
 
 import (
-	"github.com/gogf/katyusha/.examples/basic/protocol"
+	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/katyusha/.examples/basic/protobuf"
 	"github.com/gogf/katyusha/.examples/basic/service"
 	"github.com/gogf/katyusha/krpc"
 )
 
-// go run server_echo.go -node node1
-// go run server_echo.go -node node2
-// go run server_echo.go -node node3
 func main() {
-	s := krpc.Server.NewGrpcServer()
-	protocol.RegisterEchoServer(s.Server, new(service.Echo))
+	c := krpc.Server.NewGrpcServerConfig()
+	c.MustSetWithMap(g.Map{
+		"AppId": protobuf.AppId,
+	})
+	s := krpc.Server.NewGrpcServer(c)
+	protobuf.RegisterEchoServer(s.Server, new(service.Echo))
+	protobuf.RegisterTimeServer(s.Server, new(service.Time))
 	s.Run()
 }
