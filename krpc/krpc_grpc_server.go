@@ -42,7 +42,11 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config = s.NewGrpcServerConfig()
 	}
 	if config.Address == "" {
-		g.Log().Fatal("server address cannot be empty")
+		randomPort := s.randomPort()
+		if randomPort == randomPortNotAvailable {
+			g.Log().Fatal("server address is empty and random port retrieving failed")
+		}
+		config.Address = fmt.Sprintf(`:%d`, randomPort)
 	}
 	if !gstr.Contains(config.Address, ":") {
 		g.Log().Fatal("invalid service address, should contain listening port")
@@ -63,6 +67,23 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	}, grpcServer.config.Options...)
 	grpcServer.Server = grpc.NewServer(grpcServer.config.Options...)
 	return grpcServer
+}
+
+// randomPort returns a random port that is not used by other processes.
+func (s krpcServer) randomPort() int {
+	intranetIp, err := gipv4.GetIntranetIp()
+	if err != nil {
+		panic(err)
+	}
+	for i := randomPortMin; i <= randomPortMax; i++ {
+		conn, err := net.Dial("tcp", fmt.Sprintf(`%s:%d`, intranetIp, i))
+		if err != nil {
+			return i
+		} else {
+			conn.Close()
+		}
+	}
+	return randomPortNotAvailable
 }
 
 // Service binds service list to current server.

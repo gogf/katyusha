@@ -3,7 +3,6 @@
 
 [grpcserver]
     appId            = ["echo"]
-    address          = ":8001"
     logPath          = "./log"
     logStdout        = true
     errorLogEnabled  = true

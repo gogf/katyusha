@@ -32,7 +32,6 @@ type GrpcServerConfig struct {
 // some pointer attributes that may be shared in different servers.
 func (s krpcServer) NewGrpcServerConfig() *GrpcServerConfig {
 	config := &GrpcServerConfig{
-		Address:          ":8000",
 		Logger:           glog.New(),
 		LogStdout:        true,
 		ErrorLogEnabled:  true,

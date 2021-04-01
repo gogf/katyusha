@@ -7,9 +7,7 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/katyusha/.examples/basic/protocol"
 	"github.com/gogf/katyusha/.examples/basic/service"
 	"github.com/gogf/katyusha/krpc"
@@ -22,7 +20,6 @@ func main() {
 	c := krpc.Server.NewGrpcServerConfig()
 	c.MustSetWithMap(g.Map{
 		"AppId":            "time",
-		"Address":          fmt.Sprintf("0.0.0.0:%s", gcmd.GetOpt("port")),
 		"AccessLogEnabled": true,
 	})
 	s := krpc.Server.NewGrpcServer(c)
