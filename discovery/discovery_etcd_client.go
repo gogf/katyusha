@@ -24,7 +24,7 @@ func getEtcdClient() (*etcd3.Client, error) {
 	if etcdClient != nil {
 		return etcdClient, nil
 	}
-	endpoints := gstr.SplitAndTrim(gcmd.GetWithEnv(EnvKey.Endpoints).String(), ",")
+	endpoints := gstr.SplitAndTrim(gcmd.GetOptWithEnv(EnvKey.Endpoints).String(), ",")
 	if len(endpoints) == 0 {
 		return nil, gerror.New(`endpoints not found from environment, command-line or configuration file`)
 	}

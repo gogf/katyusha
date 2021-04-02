@@ -32,27 +32,27 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 	if target.Endpoint == "" {
 		return nil, gerror.New(`requested app id cannot be empty`)
 	}
-	// ETCD watcher initialization.
-	if r.etcdWatcher == nil {
-		etcdClient, err := getEtcdClient()
-		if err != nil {
-			return nil, err
-		}
-		// Watch certain service prefix.
-		r.etcdWatcher = newEtcdWatcher(
-			etcdClient,
-			gstr.Join([]string{
-				gcmd.GetWithEnv(EnvKey.PrefixRoot, DefaultValue.PrefixRoot).String(),
-				gcmd.GetWithEnv(EnvKey.Deployment, DefaultValue.Deployment).String(),
-				gcmd.GetWithEnv(EnvKey.Group, DefaultValue.Group).String(),
-				target.Endpoint,
-			}, "/"),
-		)
+	// Create a new builder for each client.
+	builder := &etcdBuilder{}
+	// Etcd client instance.
+	etcdClient, err := getEtcdClient()
+	if err != nil {
+		return nil, err
 	}
-	r.waitGroup.Add(1)
+	// Watch certain service prefix.
+	builder.etcdWatcher = newEtcdWatcher(
+		etcdClient,
+		gstr.Join([]string{
+			gcmd.GetOptWithEnv(EnvKey.PrefixRoot, DefaultValue.PrefixRoot).String(),
+			gcmd.GetOptWithEnv(EnvKey.Deployment, DefaultValue.Deployment).String(),
+			gcmd.GetOptWithEnv(EnvKey.Group, DefaultValue.Group).String(),
+			target.Endpoint,
+		}, "/"),
+	)
+	builder.waitGroup.Add(1)
 	go func() {
-		defer r.waitGroup.Done()
-		for addresses := range r.etcdWatcher.Watch() {
+		defer builder.waitGroup.Done()
+		for addresses := range builder.etcdWatcher.Watch() {
 			g.Log().Debugf(`AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
 			if len(addresses) > 0 {
 				clientConn.UpdateState(resolver.State{
