@@ -47,7 +47,7 @@ func initDefaultDiscovery() error {
 	}
 	defaultDiscovery = &etcdDiscovery{
 		etcd3Client:  client,
-		keepaliveTtl: gcmd.GetWithEnv(EnvKey.KeepAlive, DefaultValue.KeepAlive).Duration(),
+		keepaliveTtl: gcmd.GetOptWithEnv(EnvKey.KeepAlive, DefaultValue.KeepAlive).Duration(),
 	}
 	return nil
 }
@@ -85,29 +85,29 @@ func Close() error {
 func (r *etcdDiscovery) Register(service *Service) error {
 	// Necessary.
 	if service.AppId == "" {
-		service.AppId = gcmd.GetWithEnv(EnvKey.AppId).String()
+		service.AppId = gcmd.GetOptWithEnv(EnvKey.AppId).String()
 		if service.AppId == "" {
 			return gerror.New(`service app id cannot be empty`)
 		}
 	}
 	// Necessary.
 	if service.Address == "" {
-		service.Address = gcmd.GetWithEnv(EnvKey.Address).String()
+		service.Address = gcmd.GetOptWithEnv(EnvKey.Address).String()
 		if service.Address == "" {
 			return gerror.Newf(`service address for "%s" cannot be empty`, service.AppId)
 		}
 	}
 	if service.Deployment == "" {
-		service.Deployment = gcmd.GetWithEnv(EnvKey.Deployment, DefaultValue.Deployment).String()
+		service.Deployment = gcmd.GetOptWithEnv(EnvKey.Deployment, DefaultValue.Deployment).String()
 	}
 	if service.Group == "" {
-		service.Group = gcmd.GetWithEnv(EnvKey.Group, DefaultValue.Group).String()
+		service.Group = gcmd.GetOptWithEnv(EnvKey.Group, DefaultValue.Group).String()
 	}
 	if service.Version == "" {
-		service.Version = gcmd.GetWithEnv(EnvKey.Version, DefaultValue.Version).String()
+		service.Version = gcmd.GetOptWithEnv(EnvKey.Version, DefaultValue.Version).String()
 	}
 	if len(service.Metadata) == 0 {
-		service.Metadata = gcmd.GetWithEnv(EnvKey.Metadata).Map()
+		service.Metadata = gcmd.GetOptWithEnv(EnvKey.Metadata).Map()
 	}
 	metadataMarshalBytes, err := json.Marshal(service.Metadata)
 	if err != nil {
