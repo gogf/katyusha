@@ -8,6 +8,8 @@ package krpc
 
 import (
 	"context"
+
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/util/gutil"
 	"github.com/gogf/gf/util/gvalid"
@@ -38,8 +40,8 @@ func (s krpcServer) UnaryError(ctx context.Context, req interface{}, info *grpc.
 	res, err := handler(ctx, req)
 	if err != nil {
 		code := gerror.Code(err)
-		if code != -1 {
-			err = status.Error(codes.Code(code), err.Error())
+		if code.Code() != -1 {
+			err = status.Error(codes.Code(code.Code()), err.Error())
 		}
 	}
 	return res, err
@@ -50,17 +52,17 @@ func (s krpcServer) UnaryRecover(ctx context.Context, req interface{}, info *grp
 	gutil.TryCatch(func() {
 		res, err = handler(ctx, req)
 	}, func(exception error) {
-		err = gerror.WrapCode(int(codes.Internal), err, "panic recovered")
+		err = gerror.WrapCode(gcode.New(int(codes.Internal), "", nil), err, "panic recovered")
 	})
 	return
 }
 
-// Common validation unary interpreter.
+// UnaryValidate Common validation unary interpreter.
 func (s krpcServer) UnaryValidate(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	// It does nothing if there's no validation tag in the struct definition.
-	if err := gvalid.CheckStruct(req, nil); err != nil {
+	if err := gvalid.CheckStruct(ctx, req, nil); err != nil {
 		return nil, gerror.NewCode(
-			int(codes.InvalidArgument),
+			gcode.New(int(codes.InvalidArgument), "", nil),
 			gerror.Current(err).Error(),
 		)
 	}

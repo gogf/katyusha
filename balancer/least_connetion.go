@@ -31,16 +31,16 @@ func init() {
 
 // newLeastConnectionBuilder creates a new leastConnection balancer builder.
 func newLeastConnectionBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(
+	return base.NewBalancerBuilder(
 		BlLeastConnection,
 		&leastConnectionPickerBuilder{},
 		base.Config{HealthCheck: true},
 	)
 }
 
-func (*leastConnectionPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Picker {
+func (*leastConnectionPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.Picker {
 	if len(buildInfo.ReadySCs) == 0 {
-		return base.NewErrPickerV2(balancer.ErrNoSubConnAvailable)
+		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
 	var nodes []*leastConnectionPickerNode
 	for subConn, _ := range buildInfo.ReadySCs {

@@ -7,10 +7,11 @@
 package balancer
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/util/grand"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
-	"sync"
 )
 
 const BlRandom = "katyusha_balancer_random"
@@ -28,12 +29,12 @@ func init() {
 
 // newRandomBuilder creates a new random balancer builder.
 func newRandomBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(BlRandom, &randomPickerBuilder{}, base.Config{HealthCheck: true})
+	return base.NewBalancerBuilder(BlRandom, &randomPickerBuilder{}, base.Config{HealthCheck: true})
 }
 
-func (*randomPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.V2Picker {
+func (*randomPickerBuilder) Build(buildInfo base.PickerBuildInfo) balancer.Picker {
 	if len(buildInfo.ReadySCs) == 0 {
-		return base.NewErrPickerV2(balancer.ErrNoSubConnAvailable)
+		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
 	var subConns []balancer.SubConn
 	for subCon, _ := range buildInfo.ReadySCs {

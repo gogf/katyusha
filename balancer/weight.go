@@ -15,7 +15,9 @@ import (
 )
 
 const (
-	BlWeight  = "katyusha_balancer_weight"
+	// BlWeight  .
+	BlWeight = "katyusha_balancer_weight"
+	// WeightKey .
 	WeightKey = "weight"
 )
 
@@ -36,14 +38,14 @@ func init() {
 
 // newWeightBuilder creates a new weight balancer builder.
 func newWeightBuilder() balancer.Builder {
-	return base.NewBalancerBuilderV2(
+	return base.NewBalancerBuilder(
 		BlWeight,
 		&weightPickerBuilder{},
 		base.Config{HealthCheck: false},
 	)
 }
 
-func (*weightPickerBuilder) Build(info base.PickerBuildInfo) balancer.V2Picker {
+func (*weightPickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 	if len(info.ReadySCs) == 0 {
 		return base.NewErrPickerV2(balancer.ErrNoSubConnAvailable)
 	}

@@ -7,8 +7,9 @@
 package discovery
 
 import (
-	"github.com/gogf/gf/frame/g"
 	"time"
+
+	"github.com/gogf/gf/frame/g"
 )
 
 // Discovery interface for service.

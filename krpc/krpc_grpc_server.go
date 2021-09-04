@@ -8,6 +8,13 @@ package krpc
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+	"time"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gipv4"
 	"github.com/gogf/gf/os/gcmd"
@@ -16,12 +23,6 @@ import (
 	"github.com/gogf/gf/text/gstr"
 	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
-	"net"
-	"os"
-	"os/signal"
-	"sync"
-	"syscall"
-	"time"
 )
 
 // GrpcServer is the server for GRPC protocol.

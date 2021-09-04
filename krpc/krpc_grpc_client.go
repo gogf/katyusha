@@ -16,11 +16,11 @@ import (
 func (c krpcClient) DefaultGrpcDialOptions() []grpc.DialOption {
 	return []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithBalancerName(balancer.RoundRobin),
+		grpc.WithDefaultServiceConfig(balancer.RoundRobin),
 	}
 }
 
-// NewGrpcConn creates and returns a client connection for given service `appId`.
+// NewGrpcClientConn NewGrpcConn creates and returns a client connection for given service `appId`.
 func (c krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	if err := discovery.InitDiscoveryFromConfig(); err != nil {
 		return nil, err

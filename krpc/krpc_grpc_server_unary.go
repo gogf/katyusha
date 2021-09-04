@@ -8,10 +8,11 @@ package krpc
 
 import (
 	"context"
+	"time"
+
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"time"
 )
 
 // UnaryLogger is the default unary interceptor for logging purpose.

@@ -7,6 +7,9 @@
 package discovery
 
 import (
+	"sync"
+	"time"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/util/gutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
@@ -14,8 +17,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/attributes"
 	"google.golang.org/grpc/resolver"
-	"sync"
-	"time"
 )
 
 type etcdWatcher struct {
