@@ -8,6 +8,7 @@ package grpctracing
 
 import (
 	"context"
+
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/katyusha"
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
@@ -38,7 +39,7 @@ func UnaryServerInterceptor(
 	metadataCopy := requestMetadata.Copy()
 
 	entries, spanCtx := Extract(ctx, metadataCopy)
-	ctx = baggage.ContextWithValues(ctx, entries...)
+	ctx = baggage.ContextWithBaggage(ctx, entries)
 	ctx = trace.ContextWithRemoteSpanContext(ctx, spanCtx)
 	name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx))
 	ctx, span := tracer.Start(
@@ -100,7 +101,7 @@ func StreamServerInterceptor(
 	requestMetadata, _ := metadata.FromIncomingContext(ctx)
 	metadataCopy := requestMetadata.Copy()
 	entries, spanCtx := Extract(ctx, metadataCopy)
-	ctx = baggage.ContextWithValues(ctx, entries...)
+	ctx = baggage.ContextWithBaggage(ctx, entries)
 	ctx = trace.ContextWithRemoteSpanContext(ctx, spanCtx)
 	name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx))
 	ctx, span := tracer.Start(

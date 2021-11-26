@@ -9,15 +9,20 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
+	"strings"
+	"time"
+
 	"github.com/gogf/gcache-adapter/adapter"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
 	"github.com/gogf/katyusha/krpc"
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
-	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
-	"net"
-	"time"
 )
 
 type server struct{}
@@ -28,19 +33,32 @@ const (
 )
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
-func initTracer() func() {
-	// Create and install Jaeger export pipeline.
-	flush, err := jaeger.InstallNewPipeline(
-		jaeger.WithCollectorEndpoint(JaegerEndpoint),
-		jaeger.WithProcess(jaeger.Process{
-			ServiceName: ServiceName,
-		}),
-		jaeger.WithSDK(&sdkTrace.Config{DefaultSampler: sdkTrace.AlwaysSample()}),
-	)
-	if err != nil {
-		g.Log().Fatal(err)
+func initTracer(serviceName, endpoint string) (tp *trace.TracerProvider, err error) {
+	var endpointOption jaeger.EndpointOption
+	if strings.HasPrefix(endpoint, "http") {
+		// HTTP.
+		endpointOption = jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(endpoint))
+	} else {
+		// UDP.
+		endpointOption = jaeger.WithAgentEndpoint(jaeger.WithAgentHost(endpoint))
 	}
-	return flush
+
+	// Create the Jaeger exporter
+	exp, err := jaeger.New(endpointOption)
+	if err != nil {
+		return nil, err
+	}
+	tp = trace.NewTracerProvider(
+		// Always be sure to batch in production.
+		trace.WithBatcher(exp),
+		// Record information about this application in an Resource.
+		trace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(serviceName),
+		)),
+	)
+	otel.SetTracerProvider(tp)
+	return tp, nil
 }
 
 // Insert is a route handler for inserting user info into dtabase.
@@ -75,7 +93,7 @@ func (s *server) Query(ctx context.Context, req *user.QueryReq) (*user.QueryRes,
 // Delete is a route handler for deleting specified user info.
 func (s *server) Delete(ctx context.Context, req *user.DeleteReq) (*user.DeleteRes, error) {
 	res := user.DeleteRes{}
-	_, err := g.Table("user").
+	_, err := g.Model("user").
 		Ctx(ctx).
 		Cache(-1, s.userCacheKey(req.Id)).
 		WherePri(req.Id).
@@ -91,8 +109,10 @@ func (s *server) userCacheKey(id int32) string {
 }
 
 func main() {
-	flush := initTracer()
-	defer flush()
+	_, err := initTracer(ServiceName, JaegerEndpoint)
+	if err != nil {
+		g.Log().Fatal(err)
+	}
 
 	g.DB().GetCache().SetAdapter(adapter.NewRedis(g.Redis()))
 

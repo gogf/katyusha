@@ -19,7 +19,7 @@ import (
 	"github.com/golang/protobuf/proto" //nolint:staticcheck
 
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/semconv"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	grpcCodes "google.golang.org/grpc/codes"
@@ -36,20 +36,20 @@ func (m messageType) Event(ctx context.Context, id int, message interface{}) {
 	if p, ok := message.(proto.Message); ok {
 		span.AddEvent("message", trace.WithAttributes(
 			attribute.KeyValue(m),
-			semconv.RPCMessageIDKey.Int(id),
-			semconv.RPCMessageUncompressedSizeKey.Int(proto.Size(p)),
+			attribute.Key("message.id").Int(id),
+			attribute.Key("message.uncompressed_size").Int(proto.Size(p)),
 		))
 	} else {
 		span.AddEvent("message", trace.WithAttributes(
 			attribute.KeyValue(m),
-			semconv.RPCMessageIDKey.Int(id),
+			attribute.Key("message.id").Int(id),
 		))
 	}
 }
 
 var (
-	messageSent     = messageType(semconv.RPCMessageTypeSent)
-	messageReceived = messageType(semconv.RPCMessageTypeReceived)
+	messageSent     = messageType(attribute.Key("message.type").String("SENT"))
+	messageReceived = messageType(attribute.Key("message.type").String("RECEIVED"))
 )
 
 type streamEventType int
@@ -227,7 +227,7 @@ func wrapServerStream(ctx context.Context, ss grpc.ServerStream) *serverStream {
 // spanInfo returns a span name and all appropriate attributes from the gRPC
 // method and peer address.
 func spanInfo(fullMethod, peerAddress string) (string, []attribute.KeyValue) {
-	attrs := []attribute.KeyValue{semconv.RPCSystemGRPC}
+	attrs := []attribute.KeyValue{attribute.Key("rpc.system").String("grpc")}
 	name, mAttrs := parseFullMethod(fullMethod)
 	attrs = append(attrs, mAttrs...)
 	attrs = append(attrs, peerAttr(peerAddress)...)

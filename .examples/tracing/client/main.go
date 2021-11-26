@@ -8,12 +8,17 @@ package main
 
 import (
 	"context"
+	"strings"
+
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gtrace"
 	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
 	"github.com/gogf/katyusha/krpc"
-	"go.opentelemetry.io/otel/exporters/trace/jaeger"
-	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	"go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
 	"google.golang.org/grpc"
 )
 
@@ -23,23 +28,36 @@ const (
 )
 
 // initTracer creates a new trace provider instance and registers it as global trace provider.
-func initTracer() func() {
-	// Create and install Jaeger export pipeline.
-	flush, err := jaeger.InstallNewPipeline(
-		jaeger.WithCollectorEndpoint(JaegerEndpoint),
-		jaeger.WithProcess(jaeger.Process{
-			ServiceName: ServiceName,
-		}),
-		jaeger.WithSDK(&sdkTrace.Config{DefaultSampler: sdkTrace.AlwaysSample()}),
-	)
-	if err != nil {
-		g.Log().Fatal(err)
+func initTracer(serviceName, endpoint string) (tp *trace.TracerProvider, err error) {
+	var endpointOption jaeger.EndpointOption
+	if strings.HasPrefix(endpoint, "http") {
+		// HTTP.
+		endpointOption = jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(endpoint))
+	} else {
+		// UDP.
+		endpointOption = jaeger.WithAgentEndpoint(jaeger.WithAgentHost(endpoint))
 	}
-	return flush
+
+	// Create the Jaeger exporter
+	exp, err := jaeger.New(endpointOption)
+	if err != nil {
+		return nil, err
+	}
+	tp = trace.NewTracerProvider(
+		// Always be sure to batch in production.
+		trace.WithBatcher(exp),
+		// Record information about this application in an Resource.
+		trace.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String(serviceName),
+		)),
+	)
+	otel.SetTracerProvider(tp)
+	return tp, nil
 }
 
 func StartRequests() {
-	ctx, span := gtrace.Tracer().Start(context.Background(), "StartRequests")
+	ctx, span := gtrace.NewSpan(context.Background(), "StartRequests")
 	defer span.End()
 
 	grpcClientOptions := make([]grpc.DialOption, 0)
@@ -103,8 +121,10 @@ func StartRequests() {
 }
 
 func main() {
-	flush := initTracer()
-	defer flush()
+	_, err := initTracer(ServiceName, JaegerEndpoint)
+	if err != nil {
+		g.Log().Fatal(err)
+	}
 
 	StartRequests()
 }

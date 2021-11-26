@@ -8,6 +8,8 @@ package krpc
 
 import (
 	"context"
+
+	"github.com/gogf/gf/errors/gcode"
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/katyusha/krpc/internal/grpctracing"
 	"google.golang.org/grpc"
@@ -23,7 +25,7 @@ func (c krpcClient) UnaryError(ctx context.Context, method string, req, reply in
 		grpcStatus, ok := status.FromError(err)
 		if ok {
 			if code := grpcStatus.Code(); code != 0 {
-				return gerror.NewCode(int(code), grpcStatus.Message())
+				return gerror.NewCode(gcode.New(int(code), "", nil), grpcStatus.Message())
 			}
 			return gerror.New(grpcStatus.Message())
 		}

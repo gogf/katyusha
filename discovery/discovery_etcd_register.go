@@ -8,13 +8,14 @@ package discovery
 
 import (
 	"encoding/json"
+	"sync"
+	"time"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
-	"sync"
-	"time"
 )
 
 // etcdDiscovery is the interface Registry implements using ETCD.

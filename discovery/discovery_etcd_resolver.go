@@ -7,12 +7,13 @@
 package discovery
 
 import (
+	"sync"
+
 	"github.com/gogf/gf/errors/gerror"
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/os/gcmd"
 	"github.com/gogf/gf/text/gstr"
 	"google.golang.org/grpc/resolver"
-	"sync"
 )
 
 // etcdBuilder implements interface resolver.Builder.

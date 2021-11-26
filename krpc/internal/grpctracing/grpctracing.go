@@ -10,6 +10,7 @@ package grpctracing
 
 import (
 	"context"
+
 	"google.golang.org/grpc/metadata"
 
 	"go.opentelemetry.io/otel"
@@ -76,10 +77,9 @@ func Inject(ctx context.Context, metadata metadata.MD) {
 // Extract returns the correlation context and span context that
 // another service encoded in the gRPC metadata object with Inject.
 // This function is meant to be used on incoming requests.
-func Extract(ctx context.Context, metadata metadata.MD) ([]attribute.KeyValue, trace.SpanContext) {
+func Extract(ctx context.Context, metadata metadata.MD) (baggage.Baggage, trace.SpanContext) {
 	ctx = otel.GetTextMapPropagator().Extract(ctx, &metadataSupplier{
 		metadata: metadata,
 	})
-	labelSet := baggage.Set(ctx)
-	return (&labelSet).ToSlice(), trace.RemoteSpanContextFromContext(ctx)
+	return baggage.FromContext(ctx), trace.SpanContextFromContext(ctx)
 }
