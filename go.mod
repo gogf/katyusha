@@ -4,13 +4,15 @@ go 1.11
 
 require (
 	github.com/gogf/gf v1.16.7-0.20210903025403-077a41911bac
+	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2
+	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.1
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.opentelemetry.io/otel v1.2.0
-	go.opentelemetry.io/otel/trace v1.2.0
 	go.opentelemetry.io/otel/exporters/jaeger v1.2.0
-    go.opentelemetry.io/otel/sdk v1.2.0
+	go.opentelemetry.io/otel/sdk v1.2.0
+	go.opentelemetry.io/otel/trace v1.2.0
 	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9
 	golang.org/x/sys v0.0.0-20211124211545-fe61309f8881 // indirect
 	google.golang.org/grpc v1.40.0
