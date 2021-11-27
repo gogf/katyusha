@@ -7,12 +7,13 @@
 package discovery
 
 import (
+	"context"
 	"sync"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/text/gstr"
 	"google.golang.org/grpc/resolver"
 )
 
@@ -29,14 +30,18 @@ func init() {
 
 // Build implements interface google.golang.org/grpc/resolver.Builder.
 func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientConn, options resolver.BuildOptions) (resolver.Resolver, error) {
-	g.Log().Debug("Build", target, clientConn, options)
+	var (
+		err error
+		ctx = context.TODO()
+	)
+	g.Log().Debug(ctx, "Build", target, clientConn, options)
 	if target.Endpoint == "" {
 		return nil, gerror.New(`requested app id cannot be empty`)
 	}
 	// Create a new builder for each client.
 	builder := &etcdBuilder{}
 	// Etcd client instance.
-	etcdClient, err := getEtcdClient()
+	etcdClient, err = getEtcdClient()
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +59,14 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 	go func() {
 		defer builder.waitGroup.Done()
 		for addresses := range builder.etcdWatcher.Watch() {
-			g.Log().Debugf(`AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
+			g.Log().Debugf(ctx, `AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
 			if len(addresses) > 0 {
-				clientConn.UpdateState(resolver.State{
+				err = clientConn.UpdateState(resolver.State{
 					Addresses: addresses,
 				})
+				if err != nil {
+					clientConn.ReportError(gerror.Wrap(err, `Update connection state failed`))
+				}
 			} else {
 				// Service addresses empty, that means service shuts down or unavailable temporarily.
 				clientConn.ReportError(gerror.New("Service unavailable: service shuts down or unavailable temporarily"))

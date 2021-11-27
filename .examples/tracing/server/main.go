@@ -13,12 +13,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gcache-adapter/adapter"
-	"github.com/gogf/gf/frame/g"
+	"github.com/gogf/gf/v2/database/gdb"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcache"
 	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
 	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/trace/jaeger"
+	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
@@ -63,14 +64,15 @@ func initTracer(serviceName, endpoint string) (tp *trace.TracerProvider, err err
 
 // Insert is a route handler for inserting user info into dtabase.
 func (s *server) Insert(ctx context.Context, req *user.InsertReq) (*user.InsertRes, error) {
-	res := user.InsertRes{}
-	result, err := g.Table("user").Ctx(ctx).Insert(g.Map{
-		"name": req.Name,
-	})
+	var (
+		res     = user.InsertRes{}
+		id, err = g.Model("user").Ctx(ctx).Data(g.Map{
+			"name": req.Name,
+		}).InsertAndGetId()
+	)
 	if err != nil {
 		return nil, err
 	}
-	id, _ := result.LastInsertId()
 	res.Id = int32(id)
 	return &res, nil
 }
@@ -79,11 +81,13 @@ func (s *server) Insert(ctx context.Context, req *user.InsertReq) (*user.InsertR
 // if there's nothing in the redis, it then does db select.
 func (s *server) Query(ctx context.Context, req *user.QueryReq) (*user.QueryRes, error) {
 	res := user.QueryRes{}
-	err := g.Table("user").
+	err := g.Model("user").
 		Ctx(ctx).
-		Cache(5*time.Second, s.userCacheKey(req.Id)).
-		WherePri(req.Id).
-		Scan(&res)
+		Cache(gdb.CacheOption{
+			Duration: 5 * time.Second,
+			Name:     s.userCacheKey(req.Id),
+			Force:    false,
+		}).WherePri(req.Id).Scan(&res)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +99,11 @@ func (s *server) Delete(ctx context.Context, req *user.DeleteReq) (*user.DeleteR
 	res := user.DeleteRes{}
 	_, err := g.Model("user").
 		Ctx(ctx).
-		Cache(-1, s.userCacheKey(req.Id)).
+		Cache(gdb.CacheOption{
+			Duration: -1,
+			Name:     s.userCacheKey(req.Id),
+			Force:    false,
+		}).
 		WherePri(req.Id).
 		Delete()
 	if err != nil {
@@ -109,17 +117,19 @@ func (s *server) userCacheKey(id int32) string {
 }
 
 func main() {
+	var (
+		ctx = context.TODO()
+	)
 	_, err := initTracer(ServiceName, JaegerEndpoint)
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
-
-	g.DB().GetCache().SetAdapter(adapter.NewRedis(g.Redis()))
+	g.DB().GetCache().SetAdapter(gcache.NewAdapterRedis(g.Redis()))
 
 	address := ":8000"
 	listen, err := net.Listen("tcp", address)
 	if err != nil {
-		g.Log().Fatalf("failed to listen: %v", err)
+		g.Log().Fatalf(ctx, "failed to listen: %v", err)
 	}
 	s := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -130,8 +140,8 @@ func main() {
 		),
 	)
 	user.RegisterUserServer(s, &server{})
-	g.Log().Printf("grpc server starts listening on %s", address)
+	g.Log().Printf(ctx, "grpc server starts listening on %s", address)
 	if err := s.Serve(listen); err != nil {
-		g.Log().Fatalf("failed to serve: %v", err)
+		g.Log().Fatalf(ctx, "failed to serve: %v", err)
 	}
 }

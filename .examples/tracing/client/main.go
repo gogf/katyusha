@@ -10,8 +10,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
 	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel"
@@ -73,7 +73,7 @@ func StartRequests() {
 
 	conn, err := grpc.Dial(":8000", grpcClientOptions...)
 	if err != nil {
-		g.Log().Fatalf("did not connect: %v", err)
+		g.Log().Fatalf(ctx, "did not connect: %v", err)
 	}
 	defer conn.Close()
 
@@ -84,46 +84,49 @@ func StartRequests() {
 		Name: "john",
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Fatalf(`%+v`, err)
+		g.Log().Fatalf(ctx, `%+v`, err)
 	}
-	g.Log().Ctx(ctx).Println("insert:", insertRes.Id)
+	g.Log().Print(ctx, "insert:", insertRes.Id)
 
 	// Query.
 	queryRes, err := client.Query(ctx, &user.QueryReq{
 		Id: insertRes.Id,
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Printf(`%+v`, err)
+		g.Log().Printf(ctx, `%+v`, err)
 		return
 	}
-	g.Log().Ctx(ctx).Println("query:", queryRes)
+	g.Log().Print(ctx, "query:", queryRes)
 
 	// Delete.
 	_, err = client.Delete(ctx, &user.DeleteReq{
 		Id: insertRes.Id,
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Printf(`%+v`, err)
+		g.Log().Printf(ctx, `%+v`, err)
 		return
 	}
-	g.Log().Ctx(ctx).Println("delete:", insertRes.Id)
+	g.Log().Print(ctx, "delete:", insertRes.Id)
 
 	// Delete with error.
 	_, err = client.Delete(ctx, &user.DeleteReq{
 		Id: -1,
 	})
 	if err != nil {
-		g.Log().Ctx(ctx).Printf(`%+v`, err)
+		g.Log().Printf(ctx, `%+v`, err)
 		return
 	}
-	g.Log().Ctx(ctx).Println("delete:", -1)
+	g.Log().Print(ctx, "delete:", -1)
 
 }
 
 func main() {
+	var (
+		ctx = context.TODO()
+	)
 	_, err := initTracer(ServiceName, JaegerEndpoint)
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 
 	StartRequests()

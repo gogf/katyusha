@@ -9,7 +9,7 @@ package balancer
 import (
 	"sync"
 
-	"github.com/gogf/gf/util/grand"
+	"github.com/gogf/gf/v2/util/grand"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
 )

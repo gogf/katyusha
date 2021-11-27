@@ -1,0 +1,29 @@
+# Database configuration.
+database:
+  logger:
+    level:  "all"
+    stdout: true
+
+  default:
+    link: "mysql:root:12345678@tcp(127.0.0.1:3306)/test?loc=Local&parseTime=true"
+    debug: true
+
+# Redis.
+redis:
+    default:
+      address: 127.0.0.1:6379,0
+
+    cache:
+      address: 127.0.0.1:6379,1
+
+
+# Logger configuration.
+logger:
+  level : "all"
+  stdout: true
+
+
+
+
+
+

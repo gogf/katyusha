@@ -7,6 +7,8 @@
 package krpc
 
 import (
+	"fmt"
+
 	"github.com/gogf/katyusha/balancer"
 	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
@@ -16,7 +18,10 @@ import (
 func (c krpcClient) DefaultGrpcDialOptions() []grpc.DialOption {
 	return []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithDefaultServiceConfig(balancer.RoundRobin),
+		grpc.WithDefaultServiceConfig(fmt.Sprintf(
+			`{"loadBalancingPolicy": "%s"}`,
+			balancer.RoundRobin,
+		)),
 	}
 }
 

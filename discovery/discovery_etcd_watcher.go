@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/util/gutil"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/util/gutil"
 	"go.etcd.io/etcd/api/v3/mvccpb"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
@@ -42,6 +42,9 @@ func newEtcdWatcher(etcdClient *etcd3.Client, key string) *etcdWatcher {
 
 // Watch keeps watching the registered prefix key events.
 func (w *etcdWatcher) Watch() chan []resolver.Address {
+	var (
+		ctx = context.TODO()
+	)
 	w.initializeAddresses()
 	addressCh := make(chan []resolver.Address, 10)
 	w.waitGroup.Add(1)
@@ -54,12 +57,12 @@ func (w *etcdWatcher) Watch() chan []resolver.Address {
 		// Watch events handling.
 		for watchResponse := range w.etcdClient.Watch(w.ctx, w.key, etcd3.WithPrefix()) {
 			for _, ev := range watchResponse.Events {
-				g.Log().Debugf("watch event: %d, key: %s, value: %s", ev.Type, ev.Kv.Key, ev.Kv.Value)
+				g.Log().Debugf(ctx, "watch event: %d, key: %s, value: %s", ev.Type, ev.Kv.Key, ev.Kv.Value)
 				switch ev.Type {
 				case mvccpb.PUT:
 					service := newServiceFromKeyValue(ev.Kv.Key, ev.Kv.Value)
 					if service == nil {
-						g.Log().Error("service creating failed for key: %s, value:%s", ev.Kv.Key, ev.Kv.Value)
+						g.Log().Error(ctx, "service creating failed for key: %s, value:%s", ev.Kv.Key, ev.Kv.Value)
 						continue
 					}
 					address := resolver.Address{
@@ -73,7 +76,7 @@ func (w *etcdWatcher) Watch() chan []resolver.Address {
 				case mvccpb.DELETE:
 					service := newServiceFromKeyValue(ev.Kv.Key, ev.Kv.Value)
 					if service == nil {
-						g.Log().Error("service creating failed for key: %s, value:%s", ev.Kv.Key, ev.Kv.Value)
+						g.Log().Error(ctx, "service creating failed for key: %s, value:%s", ev.Kv.Key, ev.Kv.Value)
 						continue
 					}
 					address := resolver.Address{
@@ -95,7 +98,7 @@ func (w *etcdWatcher) initializeAddresses() {
 	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
 	res, err := w.etcdClient.Get(ctx, w.key, etcd3.WithPrefix())
 	if err != nil {
-		g.Log().Error(err)
+		g.Log().Error(ctx, err)
 		return
 	}
 	if res == nil {

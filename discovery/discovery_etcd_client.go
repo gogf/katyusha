@@ -7,9 +7,9 @@
 package discovery
 
 import (
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/text/gstr"
 	etcd3 "go.etcd.io/etcd/client/v3"
 )
 

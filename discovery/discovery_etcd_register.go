@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gogf/gf/errors/gerror"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
 	etcd3 "go.etcd.io/etcd/client/v3"
 	"golang.org/x/net/context"
 )
@@ -84,6 +84,9 @@ func Close() error {
 
 // Register registers `service` to ETCD.
 func (r *etcdDiscovery) Register(service *Service) error {
+	var (
+		ctx = context.TODO()
+	)
 	// Necessary.
 	if service.AppId == "" {
 		service.AppId = gcmd.GetOptWithEnv(EnvKey.AppId).String()
@@ -119,41 +122,44 @@ func (r *etcdDiscovery) Register(service *Service) error {
 		serviceRegisterKey = service.RegisterKey()
 	)
 
-	g.Log().Debugf(`service register key: %s`, serviceRegisterKey)
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	g.Log().Debugf(ctx, `service register key: %s`, serviceRegisterKey)
+	ctx, _ = context.WithTimeout(ctx, 10*time.Second)
 	resp, err := r.etcd3Client.Grant(ctx, int64(r.keepaliveTtl/time.Second))
 	if err != nil {
 		return err
 	}
-	g.Log().Debugf(`service registered lease id: %d, metadata: %s`, resp.ID, metadataMarshalStr)
+	g.Log().Debugf(ctx, `service registered lease id: %d, metadata: %s`, resp.ID, metadataMarshalStr)
 	r.etcdGrantId = resp.ID
 	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
 		return err
 	}
-	g.Log().Debugf(`service request keepalive for grant id: %d`, resp.ID)
+	g.Log().Debugf(ctx, `service request keepalive for grant id: %d`, resp.ID)
 	keepAliceCh, err := r.etcd3Client.KeepAlive(context.Background(), resp.ID)
 	if err != nil {
 		return err
 	}
-	g.Log().Printf(`service registered: %+v`, service)
+	g.Log().Printf(ctx, `service registered: %+v`, service)
 	go r.keepAlive(service, keepAliceCh)
 	return nil
 }
 
 // keepAlive continuously keeps alive the lease from ETCD.
 func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
+	var (
+		ctx = context.TODO()
+	)
 	for {
 		select {
 		case <-r.etcd3Client.Ctx().Done():
-			g.Log().Debugf("keepalive done for lease id: %d", r.etcdGrantId)
+			g.Log().Debugf(ctx, "keepalive done for lease id: %d", r.etcdGrantId)
 			return
 
 		case res, ok := <-keepAliceCh:
 			if res != nil {
-				//g.Log().Debugf(`keepalive loop: %v, %s`, ok, res.String())
+				// g.Log().Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
-				//g.Log().Debugf(`keepalive exit, lease id: %d`, r.etcdGrantId)
+				// g.Log().Debugf(ctx, `keepalive exit, lease id: %d`, r.etcdGrantId)
 				return
 			}
 		}

@@ -7,26 +7,31 @@
 package main
 
 import (
-	"github.com/gogf/gf/frame/g"
+	"time"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/katyusha/.examples/basic/protobuf"
 	"golang.org/x/net/context"
-	"time"
 )
 
 // go run client_echo.go
 func main() {
-	client, err := protobuf.NewClient()
+	var (
+		ctx         = gctx.New()
+		client, err = protobuf.NewClient()
+	)
 	if err != nil {
-		g.Log().Fatal(err)
+		g.Log().Fatal(ctx, err)
 	}
 	for i := 0; i < 500; i++ {
 		res, err := client.EchoClient.Say(context.Background(), &protobuf.SayReq{Content: "Hello"})
 		if err != nil {
-			g.Log().Error(err)
+			g.Log().Error(ctx, err)
 			time.Sleep(time.Second)
 			continue
 		}
 		time.Sleep(time.Second)
-		g.Log().Print("Response:", res.Content)
+		g.Log().Print(ctx, "Response:", res.Content)
 	}
 }
