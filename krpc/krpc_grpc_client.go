@@ -7,9 +7,10 @@
 package krpc
 
 import (
+	"google.golang.org/grpc"
+
 	"github.com/gogf/katyusha/balancer"
 	"github.com/gogf/katyusha/discovery"
-	"google.golang.org/grpc"
 )
 
 // DefaultGrpcDialOptions returns the default options for creating grpc client connection.

@@ -11,12 +11,11 @@ package grpctracing
 import (
 	"context"
 
-	"google.golang.org/grpc/metadata"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/grpc/metadata"
 )
 
 const (
@@ -25,7 +24,7 @@ const (
 )
 
 const (
-	tracingMaxContentLogSize         = 256 * 1024 // Max log size for request and response body.
+	tracingMaxContentLogSize         = 512 * 1024 // Max log size for request and response body.
 	tracingInstrumentGrpcClient      = "github.com/gogf/katyusha/krpc.GrpcClient"
 	tracingInstrumentGrpcServer      = "github.com/gogf/katyusha/krpc.GrpcServer"
 	tracingEventGrpcRequest          = "grpc.request"
@@ -58,7 +57,7 @@ func (s *metadataSupplier) Keys() []string {
 		index = 0
 		keys  = make([]string, s.metadata.Len())
 	)
-	for k, _ := range s.metadata {
+	for k := range s.metadata {
 		keys[index] = k
 		index++
 	}

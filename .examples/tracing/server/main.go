@@ -13,16 +13,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gogf/gcache-adapter/adapter"
 	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
-	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/exporters/trace/jaeger"
+	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
+	"github.com/gogf/katyusha/krpc"
 )
 
 type server struct{}
@@ -114,7 +114,7 @@ func main() {
 		g.Log().Fatal(err)
 	}
 
-	g.DB().GetCache().SetAdapter(adapter.NewRedis(g.Redis()))
+	// g.DB().GetCache().SetAdapter(adapter.NewRedis(g.Redis()))
 
 	address := ":8000"
 	listen, err := net.Listen("tcp", address)

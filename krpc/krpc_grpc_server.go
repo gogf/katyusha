@@ -21,8 +21,9 @@ import (
 	"github.com/gogf/gf/os/glog"
 	"github.com/gogf/gf/os/gproc"
 	"github.com/gogf/gf/text/gstr"
-	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/katyusha/discovery"
 )
 
 // GrpcServer is the server for GRPC protocol.

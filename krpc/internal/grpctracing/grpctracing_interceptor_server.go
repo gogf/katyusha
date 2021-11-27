@@ -10,9 +10,6 @@ import (
 	"context"
 
 	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/katyusha"
-	"github.com/gogf/katyusha/krpc/internal/grpcctx"
-	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/baggage"
@@ -22,6 +19,10 @@ import (
 	grpcCodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/gogf/katyusha"
+	"github.com/gogf/katyusha/krpc/internal/grpcctx"
+	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable
@@ -53,8 +54,8 @@ func UnaryServerInterceptor(
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
-		attribute.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
-		attribute.Any(tracingEventGrpcMetadataIncoming, grpcctx.Ctx.IncomingMap(ctx)),
+		attribute.String(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx).String()),
+		attribute.String(tracingEventGrpcMetadataIncoming, grpcctx.Ctx.IncomingMap(ctx).String()),
 		attribute.String(
 			tracingEventGrpcRequestMessage,
 			grpcutils.MarshalMessageToJsonStringForTracing(

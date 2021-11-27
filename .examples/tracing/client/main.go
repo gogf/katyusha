@@ -12,14 +12,15 @@ import (
 
 	"github.com/gogf/gf/frame/g"
 	"github.com/gogf/gf/net/gtrace"
-	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
-	"github.com/gogf/katyusha/krpc"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/jaeger"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
-	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/katyusha/.examples/tracing/protobuf/user"
+	"github.com/gogf/katyusha/krpc"
 )
 
 const (
