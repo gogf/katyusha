@@ -7,6 +7,7 @@
 package krpc
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -15,12 +16,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/net/gipv4"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/os/gproc"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/os/gproc"
+	"github.com/gogf/gf/v2/text/gstr"
 	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
 )
@@ -36,7 +37,10 @@ type GrpcServer struct {
 
 // NewGrpcServer creates and returns a grpc server.
 func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
-	var config *GrpcServerConfig
+	var (
+		ctx    = context.TODO()
+		config *GrpcServerConfig
+	)
 	if len(conf) > 0 {
 		config = conf[0]
 	} else {
@@ -45,12 +49,12 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	if config.Address == "" {
 		randomPort := s.randomPort()
 		if randomPort == randomPortNotAvailable {
-			g.Log().Fatal("server address is empty and random port retrieving failed")
+			g.Log().Fatal(ctx, "server address is empty and random port retrieving failed")
 		}
 		config.Address = fmt.Sprintf(`:%d`, randomPort)
 	}
 	if !gstr.Contains(config.Address, ":") {
-		g.Log().Fatal("invalid service address, should contain listening port")
+		g.Log().Fatal(ctx, "invalid service address, should contain listening port")
 	}
 	if config.Logger == nil {
 		config.Logger = glog.New()
@@ -92,12 +96,13 @@ func (s krpcServer) randomPort() int {
 func (s *GrpcServer) Service(services ...*discovery.Service) {
 	var (
 		serviceAddress string
+		ctx            = context.TODO()
 		array          = gstr.Split(s.config.Address, ":")
 	)
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIp, err := gipv4.GetIntranetIp()
 		if err != nil {
-			s.Logger.Fatal("retrieving intranet ip failed, please check your net card or manually assign the service address: " + err.Error())
+			s.Logger.Fatal(ctx, "retrieving intranet ip failed, please check your net card or manually assign the service address: "+err.Error())
 		}
 		serviceAddress = fmt.Sprintf(`%s:%s`, intraIp, array[1])
 	} else {
@@ -113,12 +118,15 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
+	var (
+		ctx = context.TODO()
+	)
 	if err := discovery.InitDiscoveryFromConfig(); err != nil {
-		s.Logger.Fatal(err)
+		s.Logger.Fatal(ctx, err)
 	}
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
-		s.Logger.Fatal(err)
+		s.Logger.Fatal(ctx, err)
 	}
 	if len(s.services) == 0 {
 		appId := gcmd.GetOptWithEnv(discovery.EnvKey.AppId).String()
@@ -138,19 +146,19 @@ func (s *GrpcServer) Run() {
 	}
 	// Start listening.
 	go func() {
-		if err := s.Server.Serve(listener); err != nil {
-			s.Logger.Fatal(err)
+		if err = s.Server.Serve(listener); err != nil {
+			s.Logger.Fatal(ctx, err)
 		}
 	}()
 
 	// Register service list after server starts.
 	for _, service := range s.services {
 		if err = discovery.Register(service); err != nil {
-			s.Logger.Fatal(err)
+			s.Logger.Fatal(ctx, err)
 		}
 	}
 
-	s.Logger.Printf("grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
+	s.Logger.Printf(ctx, "grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
 
 	// Signal listening and handling for gracefully shutdown.
 	sigChan := make(chan os.Signal, 1)
@@ -171,7 +179,7 @@ func (s *GrpcServer) Run() {
 			syscall.SIGKILL,
 			syscall.SIGTERM,
 			syscall.SIGABRT:
-			s.Logger.Printf("signal received: %s, gracefully shutting down", sig.String())
+			s.Logger.Printf(ctx, "signal received: %s, gracefully shutting down", sig.String())
 			for _, service := range s.services {
 				_ = discovery.Unregister(service)
 			}

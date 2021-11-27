@@ -7,11 +7,12 @@
 package discovery
 
 import (
+	"context"
 	"encoding/json"
 
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 // RegisterKey formats the service information with `registryDir` and returns the key string
@@ -44,7 +45,7 @@ func newServiceFromKeyValue(key, value []byte) *Service {
 	if len(value) > 0 {
 		err := json.Unmarshal(value, &service.Metadata)
 		if err != nil {
-			g.Log().Error(err)
+			g.Log().Error(context.TODO(), err)
 		}
 	}
 	return service

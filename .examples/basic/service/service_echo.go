@@ -8,8 +8,9 @@ package service
 
 import (
 	"fmt"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/gcmd"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/katyusha/.examples/basic/protobuf"
 	"golang.org/x/net/context"
 )
@@ -17,7 +18,7 @@ import (
 type Echo struct{}
 
 func (s *Echo) Say(ctx context.Context, r *protobuf.SayReq) (*protobuf.SayRes, error) {
-	g.Log().Println("Received:", r.Content)
+	g.Log().Print(ctx, "Received:", r.Content)
 	text := fmt.Sprintf(`%s: > %s`, gcmd.GetOpt("node", "default"), r.Content)
 	return &protobuf.SayRes{Content: text}, nil
 }

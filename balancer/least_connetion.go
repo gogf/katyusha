@@ -7,7 +7,7 @@
 package balancer
 
 import (
-	"github.com/gogf/gf/container/gtype"
+	"github.com/gogf/gf/v2/container/gtype"
 	"google.golang.org/grpc/balancer"
 	"google.golang.org/grpc/balancer/base"
 )

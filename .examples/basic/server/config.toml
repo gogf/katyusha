@@ -1,9 +1,0 @@
-[discovery]
-    endpoints = ["127.0.0.1:2379"]
-
-[grpcserver]
-    logPath          = "./log"
-    logStdout        = true
-    errorLogEnabled  = true
-    accessLogEnabled = true
-

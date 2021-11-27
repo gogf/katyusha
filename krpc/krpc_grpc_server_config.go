@@ -7,9 +7,11 @@
 package krpc
 
 import (
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/glog"
-	"github.com/gogf/gf/util/gconv"
+	"context"
+
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/glog"
+	"github.com/gogf/gf/v2/util/gconv"
 	"google.golang.org/grpc"
 )
 
@@ -22,28 +24,32 @@ type GrpcServerConfig struct {
 	LogStdout        bool                // (optional)  LogStdout specifies whether printing logging content to stdout.
 	ErrorLogEnabled  bool                // (optional)  ErrorLogEnabled enables error logging content to files.
 	ErrorLogPattern  string              // (optional)  ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
-	AccessLogEnabled bool                // (optional)  AccessLogEnabled enables access logging content to files.
+	AccessLogEnabled bool                // (optional)  AccessLogEnabled enables access logging content to file.
 	AccessLogPattern string              // (optional)  AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
-	Options          []grpc.ServerOption // (optional)  Server options.
+	Options          []grpc.ServerOption // (optional)  GRPC Server options.
 }
 
 // NewGrpcServerConfig creates and returns a ServerConfig object with default configurations.
 // Note that, do not define this default configuration to local package variable, as there are
 // some pointer attributes that may be shared in different servers.
 func (s krpcServer) NewGrpcServerConfig() *GrpcServerConfig {
-	config := &GrpcServerConfig{
-		Logger:           glog.New(),
-		LogStdout:        true,
-		ErrorLogEnabled:  true,
-		ErrorLogPattern:  "error-{Ymd}.log",
-		AccessLogEnabled: false,
-		AccessLogPattern: "access-{Ymd}.log",
-	}
+	var (
+		ctx    = context.TODO()
+		config = &GrpcServerConfig{
+			Logger:           glog.New(),
+			LogStdout:        true,
+			ErrorLogEnabled:  true,
+			ErrorLogPattern:  "error-{Ymd}.log",
+			AccessLogEnabled: false,
+			AccessLogPattern: "access-{Ymd}.log",
+		}
+	)
+
 	// Reading configuration file and updating the configured keys.
-	if g.Cfg().Available() {
-		err := g.Cfg().GetVar(configNodeNameGrpcServer).Struct(&config)
+	if g.Cfg().Available(ctx) {
+		err := g.Cfg().MustGet(ctx, configNodeNameGrpcServer).Struct(&config)
 		if err != nil {
-			g.Log().Error(err)
+			g.Log().Error(ctx, err)
 		}
 	}
 	return config

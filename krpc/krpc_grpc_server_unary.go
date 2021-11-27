@@ -35,21 +35,22 @@ func (s *GrpcServer) UnaryLogger(ctx context.Context, req interface{}, info *grp
 			grpcMessage = err.Error()
 		}
 		if s.config.ErrorLogEnabled {
-			s.Logger.Ctx(ctx).
-				Stack(false).
+			s.Logger.Stack(false).
 				Stdout(s.config.LogStdout).
 				File(s.config.ErrorLogPattern).
 				Errorf(
+					ctx,
 					"%s, %.3fms, %+v, %+v, %d, %+v",
 					info.FullMethod, float64(duration)/1e6, req, res, grpcCode, grpcMessage,
 				)
 		}
 	} else {
 		if s.config.AccessLogEnabled {
-			s.Logger.Ctx(ctx).
+			s.Logger.
 				Stdout(s.config.LogStdout).
 				File(s.config.AccessLogPattern).
 				Printf(
+					ctx,
 					"%s, %.3fms, %+v, %+v",
 					info.FullMethod, float64(duration)/1e6, req, res,
 				)

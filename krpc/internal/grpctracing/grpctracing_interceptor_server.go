@@ -9,7 +9,8 @@ package grpctracing
 import (
 	"context"
 
-	"github.com/gogf/gf/net/gtrace"
+	"github.com/gogf/gf/v2/net/gtrace"
+	"github.com/gogf/gf/v2/util/gconv"
 	"github.com/gogf/katyusha"
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 	"github.com/gogf/katyusha/krpc/internal/grpcutils"
@@ -53,8 +54,8 @@ func UnaryServerInterceptor(
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(
-		attribute.Any(tracingEventGrpcRequestBaggage, gtrace.GetBaggageMap(ctx)),
-		attribute.Any(tracingEventGrpcMetadataIncoming, grpcctx.Ctx.IncomingMap(ctx)),
+		attribute.String(tracingEventGrpcRequestBaggage, gconv.String(gtrace.GetBaggageMap(ctx))),
+		attribute.String(tracingEventGrpcMetadataIncoming, gconv.String(grpcctx.Ctx.IncomingMap(ctx))),
 		attribute.String(
 			tracingEventGrpcRequestMessage,
 			grpcutils.MarshalMessageToJsonStringForTracing(

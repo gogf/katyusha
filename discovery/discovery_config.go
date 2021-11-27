@@ -7,12 +7,13 @@
 package discovery
 
 import (
+	"context"
 	"encoding/json"
 
-	"github.com/gogf/gf/container/gtype"
-	"github.com/gogf/gf/frame/g"
-	"github.com/gogf/gf/os/genv"
-	"github.com/gogf/gf/text/gstr"
+	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/genv"
+	"github.com/gogf/gf/v2/text/gstr"
 )
 
 var (
@@ -26,44 +27,50 @@ func InitDiscoveryFromConfig() error {
 	if !initializedFromConfig.Cas(false, true) {
 		return nil
 	}
-	if !g.Cfg().Available() {
-		return nil
-	}
+	var (
+		ctx = context.TODO()
+	)
 	// Configuration: discovery
-	configDiscovery := g.Cfg().GetVar(configNodeNameDiscovery)
+	configDiscovery, err := g.Cfg().Get(ctx, configNodeNameDiscovery)
+	if err != nil {
+		return err
+	}
 	if !configDiscovery.IsNil() {
 		var (
 			config  *Config
 			service *Service
 		)
 		// Discovery.
-		if err := configDiscovery.Struct(&config); err != nil {
+		if err = configDiscovery.Struct(&config); err != nil {
 			return err
 		}
-		if err := discoveryConfigToEnvironment(config); err != nil {
+		if err = discoveryConfigToEnvironment(config); err != nil {
 			return err
 		}
 
 		// Service.
-		if err := configDiscovery.Struct(&service); err != nil {
+		if err = configDiscovery.Struct(&service); err != nil {
 			return err
 		}
-		if err := serviceConfigToEnvironment(service); err != nil {
+		if err = serviceConfigToEnvironment(service); err != nil {
 			return err
 		}
 	}
 	// Configuration: service
-	configService := g.Cfg().GetVar(configNodeNameService)
+	configService, err := g.Cfg().Get(ctx, configNodeNameService)
+	if err != nil {
+		return err
+	}
 	if !configService.IsNil() {
 		if configService.IsSlice() {
 			var (
 				services []*Service
 			)
-			if err := configService.Structs(&services); err != nil {
+			if err = configService.Structs(&services); err != nil {
 				return err
 			}
 			for _, service := range services {
-				if err := serviceConfigToEnvironment(service); err != nil {
+				if err = serviceConfigToEnvironment(service); err != nil {
 					return err
 				}
 			}
@@ -71,10 +78,10 @@ func InitDiscoveryFromConfig() error {
 			var (
 				service *Service
 			)
-			if err := configService.Struct(&service); err != nil {
+			if err = configService.Struct(&service); err != nil {
 				return err
 			}
-			if err := serviceConfigToEnvironment(service); err != nil {
+			if err = serviceConfigToEnvironment(service); err != nil {
 				return err
 			}
 		}
