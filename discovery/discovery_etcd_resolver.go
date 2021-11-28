@@ -59,7 +59,7 @@ func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientCo
 	go func() {
 		defer builder.waitGroup.Done()
 		for addresses := range builder.etcdWatcher.Watch() {
-			g.Log().Debugf(ctx, `AppId: %s, UpdateState: %v`, target.Endpoint, addresses)
+			g.Log().Debugf(ctx, `AppID: %s, UpdateState: %v`, target.Endpoint, addresses)
 			if len(addresses) > 0 {
 				err = clientConn.UpdateState(resolver.State{
 					Addresses: addresses,
@@ -83,7 +83,7 @@ func (r *etcdBuilder) Scheme() string {
 
 // ResolveNow implements interface google.golang.org/grpc/resolver.Resolver.
 func (r *etcdBuilder) ResolveNow(opts resolver.ResolveNowOptions) {
-	//g.Log().Debug("ResolveNow:", opts)
+	// g.Log().Debug("ResolveNow:", opts)
 }
 
 // Close implements interface google.golang.org/grpc/resolver.Resolver.

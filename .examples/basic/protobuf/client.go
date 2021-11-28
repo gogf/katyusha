@@ -1,12 +1,13 @@
 package protobuf
 
 import (
-	"github.com/gogf/katyusha/krpc"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/katyusha/krpc"
 )
 
 const (
-	AppId = "demo"
+	AppID = "demo"
 )
 
 type Client struct {
@@ -15,7 +16,7 @@ type Client struct {
 }
 
 func NewClient(options ...grpc.DialOption) (*Client, error) {
-	conn, err := krpc.Client.NewGrpcClientConn(AppId, options...)
+	conn, err := krpc.Client.NewGrpcClientConn(AppID, options...)
 	if err != nil {
 		return nil, err
 	}

@@ -13,10 +13,11 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/util/gutil"
-	"github.com/gogf/katyusha/krpc/internal/grpctracing"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/gogf/katyusha/krpc/internal/grpctracing"
 )
 
 // ChainUnary returns a ServerOption that specifies the chained interceptor

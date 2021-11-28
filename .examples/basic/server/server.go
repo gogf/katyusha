@@ -7,14 +7,14 @@
 package main
 
 import (
-	"github.com/gogf/katyusha/.examples/basic/protobuf"
-	"github.com/gogf/katyusha/.examples/basic/service"
+	"github.com/gogf/example/basic/protobuf"
+	"github.com/gogf/example/basic/service"
 	"github.com/gogf/katyusha/krpc"
 )
 
 func main() {
 	c := krpc.Server.NewGrpcServerConfig()
-	c.AppId = protobuf.AppId
+	c.AppID = protobuf.AppID
 
 	s := krpc.Server.NewGrpcServer(c)
 	protobuf.RegisterEchoServer(s.Server, new(service.Echo))

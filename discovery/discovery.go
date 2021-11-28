@@ -29,10 +29,10 @@ type Config struct {
 
 // Service definition.
 type Service struct {
-	AppId      string // (necessary) Unique id for the service, only for service discovery.
+	AppID      string // (necessary) Unique id for the service, only for service discovery.
 	Address    string // (necessary) Service address, single one, usually IP:port, eg: 192.168.1.2:8000
 	Deployment string // (optional)  Service deployment name, eg: dev, qa, staging, prod, etc.
-	Group      string // (optional)  Service group, to indicate different service in the same environment with the same Name and AppId.
+	Group      string // (optional)  Service group, to indicate different service in the same environment with the same Name and AppID.
 	Version    string // (optional)  Service version, eg: v1.0.0, v2.1.1, etc.
 	Metadata   g.Map  // (optional)  Custom data for this service, which can be set using JSON by environment or command-line.
 }
@@ -40,7 +40,7 @@ type Service struct {
 type discoveryEnvKey struct {
 	PrefixRoot string
 	KeepAlive  string
-	AppId      string
+	AppID      string
 	Address    string
 	Version    string
 	Deployment string
@@ -64,10 +64,11 @@ const (
 )
 
 var (
+	// EnvKey .Environment variable key
 	EnvKey = discoveryEnvKey{
 		PrefixRoot: "KA_PREFIX_ROOT",
 		KeepAlive:  "KA_KEEPALIVE",
-		AppId:      "KA_APP_ID",
+		AppID:      "KA_APP_ID",
 		Address:    "KA_ADDRESS",
 		Version:    "KA_VERSION",
 		Deployment: "KA_DEPLOYMENT",
@@ -76,6 +77,7 @@ var (
 		Endpoints:  "KA_ENDPOINTS",
 	}
 
+	// DefaultValue the default value of the environment variable key
 	DefaultValue = discoveryDefaultValue{
 		PrefixRoot: "/katyusha",
 		KeepAlive:  10 * time.Second,

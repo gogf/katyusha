@@ -9,9 +9,10 @@ package krpc
 import (
 	"fmt"
 
+	"google.golang.org/grpc"
+
 	"github.com/gogf/katyusha/balancer"
 	"github.com/gogf/katyusha/discovery"
-	"google.golang.org/grpc"
 )
 
 // DefaultGrpcDialOptions returns the default options for creating grpc client connection.
@@ -26,7 +27,7 @@ func (c krpcClient) DefaultGrpcDialOptions() []grpc.DialOption {
 }
 
 // NewGrpcClientConn NewGrpcConn creates and returns a client connection for given service `appId`.
-func (c krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+func (c krpcClient) NewGrpcClientConn(appID string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
 	if err := discovery.InitDiscoveryFromConfig(); err != nil {
 		return nil, err
 	}
@@ -38,7 +39,7 @@ func (c krpcClient) NewGrpcClientConn(appId string, opts ...grpc.DialOption) (*g
 	grpcClientOptions = append(grpcClientOptions, c.ChainUnary(
 		c.UnaryError,
 	))
-	conn, err := grpc.Dial(discovery.DefaultValue.Scheme+":///"+appId, grpcClientOptions...)
+	conn, err := grpc.Dial(discovery.DefaultValue.Scheme+":///"+appID, grpcClientOptions...)
 	if err != nil {
 		return nil, err
 	}

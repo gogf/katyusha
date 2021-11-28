@@ -11,9 +11,6 @@ import (
 
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/katyusha"
-	"github.com/gogf/katyusha/krpc/internal/grpcctx"
-	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -22,6 +19,10 @@ import (
 	grpcCodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/gogf/katyusha"
+	"github.com/gogf/katyusha/krpc/internal/grpcctx"
+	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 )
 
 // UnaryClientInterceptor returns a grpc.UnaryClientInterceptor suitable

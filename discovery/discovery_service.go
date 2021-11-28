@@ -22,7 +22,7 @@ func (s *Service) RegisterKey() string {
 		gcmd.GetOptWithEnv(EnvKey.PrefixRoot, DefaultValue.PrefixRoot).String(),
 		s.Deployment,
 		s.Group,
-		s.AppId,
+		s.AppID,
 		s.Version,
 		s.Address,
 	}, "/")
@@ -37,7 +37,7 @@ func newServiceFromKeyValue(key, value []byte) *Service {
 	service := &Service{
 		Deployment: array[1],
 		Group:      array[2],
-		AppId:      array[3],
+		AppID:      array[3],
 		Version:    array[4],
 		Address:    array[5],
 		Metadata:   make(g.Map),
