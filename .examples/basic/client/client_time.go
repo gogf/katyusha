@@ -11,8 +11,9 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/katyusha/.examples/basic/protobuf"
 	"golang.org/x/net/context"
+
+	"github.com/gogf/example/basic/protobuf"
 )
 
 func main() {

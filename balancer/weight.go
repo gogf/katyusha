@@ -47,7 +47,7 @@ func newWeightBuilder() balancer.Builder {
 
 func (*weightPickerBuilder) Build(info base.PickerBuildInfo) balancer.Picker {
 	if len(info.ReadySCs) == 0 {
-		return base.NewErrPickerV2(balancer.ErrNoSubConnAvailable)
+		return base.NewErrPicker(balancer.ErrNoSubConnAvailable)
 	}
 	var subConns []balancer.SubConn
 	for subConn, addr := range info.ReadySCs {

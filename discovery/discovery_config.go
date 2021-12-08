@@ -125,8 +125,8 @@ func serviceConfigToEnvironment(service *Service) error {
 	if service == nil {
 		return nil
 	}
-	if service.AppId != "" {
-		if err := genv.Set(EnvKey.AppId, service.AppId); err != nil {
+	if service.AppID != "" {
+		if err := genv.Set(EnvKey.AppID, service.AppID); err != nil {
 			return err
 		}
 	}

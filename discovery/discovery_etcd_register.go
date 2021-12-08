@@ -22,8 +22,8 @@ import (
 type etcdDiscovery struct {
 	sync.RWMutex
 	etcd3Client  *etcd3.Client
-	keepaliveTtl time.Duration
-	etcdGrantId  etcd3.LeaseID
+	keepaliveTTL time.Duration
+	etcdGrantID  etcd3.LeaseID
 }
 
 var (
@@ -48,7 +48,7 @@ func initDefaultDiscovery() error {
 	}
 	defaultDiscovery = &etcdDiscovery{
 		etcd3Client:  client,
-		keepaliveTtl: gcmd.GetOptWithEnv(EnvKey.KeepAlive, DefaultValue.KeepAlive).Duration(),
+		keepaliveTTL: gcmd.GetOptWithEnv(EnvKey.KeepAlive, DefaultValue.KeepAlive).Duration(),
 	}
 	return nil
 }
@@ -88,9 +88,9 @@ func (r *etcdDiscovery) Register(service *Service) error {
 		ctx = context.TODO()
 	)
 	// Necessary.
-	if service.AppId == "" {
-		service.AppId = gcmd.GetOptWithEnv(EnvKey.AppId).String()
-		if service.AppId == "" {
+	if service.AppID == "" {
+		service.AppID = gcmd.GetOptWithEnv(EnvKey.AppID).String()
+		if service.AppID == "" {
 			return gerror.New(`service app id cannot be empty`)
 		}
 	}
@@ -98,7 +98,7 @@ func (r *etcdDiscovery) Register(service *Service) error {
 	if service.Address == "" {
 		service.Address = gcmd.GetOptWithEnv(EnvKey.Address).String()
 		if service.Address == "" {
-			return gerror.Newf(`service address for "%s" cannot be empty`, service.AppId)
+			return gerror.Newf(`service address for "%s" cannot be empty`, service.AppID)
 		}
 	}
 	if service.Deployment == "" {
@@ -124,13 +124,13 @@ func (r *etcdDiscovery) Register(service *Service) error {
 
 	g.Log().Debugf(ctx, `service register key: %s`, serviceRegisterKey)
 	ctx, _ = context.WithTimeout(ctx, 10*time.Second)
-	resp, err := r.etcd3Client.Grant(ctx, int64(r.keepaliveTtl/time.Second))
+	resp, err := r.etcd3Client.Grant(ctx, int64(r.keepaliveTTL/time.Second))
 	if err != nil {
 		return err
 	}
 	g.Log().Debugf(ctx, `service registered lease id: %d, metadata: %s`, resp.ID, metadataMarshalStr)
-	r.etcdGrantId = resp.ID
-	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantId)); err != nil {
+	r.etcdGrantID = resp.ID
+	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantID)); err != nil {
 		return err
 	}
 	g.Log().Debugf(ctx, `service request keepalive for grant id: %d`, resp.ID)
@@ -151,7 +151,7 @@ func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Le
 	for {
 		select {
 		case <-r.etcd3Client.Ctx().Done():
-			g.Log().Debugf(ctx, "keepalive done for lease id: %d", r.etcdGrantId)
+			g.Log().Debugf(ctx, "keepalive done for lease id: %d", r.etcdGrantID)
 			return
 
 		case res, ok := <-keepAliceCh:
@@ -159,7 +159,7 @@ func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.Le
 				// g.Log().Debugf(ctx, `keepalive loop: %v, %s`, ok, res.String())
 			}
 			if !ok {
-				// g.Log().Debugf(ctx, `keepalive exit, lease id: %d`, r.etcdGrantId)
+				// g.Log().Debugf(ctx, `keepalive exit, lease id: %d`, r.etcdGrantID)
 				return
 			}
 		}
@@ -174,8 +174,8 @@ func (r *etcdDiscovery) Services() ([]*Service, error) {
 
 // Unregister removes `service` from ETCD.
 func (r *etcdDiscovery) Unregister(service *Service) error {
-	//g.Log().Debugf(`discovery.Unregister: %s`, service.AppId)
-	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantId)
+	// g.Log().Debugf(`discovery.Unregister: %s`, service.AppID)
+	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantID)
 	return err
 }
 
