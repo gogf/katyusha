@@ -48,6 +48,11 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 	)
 	defer span.End()
 
+	// If it is now using default trace provider, it then does no complex tracing jobs.
+	if gtrace.IsUsingDefaultProvider() {
+		return handler(ctx, req)
+	}
+
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(

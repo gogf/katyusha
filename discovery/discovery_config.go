@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	// initializedFromConfig is used for initialization for discovery.
+	// initializedFromConfig is used for initialization of discovery.
 	initializedFromConfig = gtype.NewBool()
 )
 

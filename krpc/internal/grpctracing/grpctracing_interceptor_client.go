@@ -49,6 +49,11 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 
 	ctx = metadata.NewOutgoingContext(ctx, metadataCopy)
 
+	// If it is now using default trace provider, it then does no complex tracing jobs.
+	if gtrace.IsUsingDefaultProvider() {
+		return invoker(ctx, method, req, reply, cc, callOpts...)
+	}
+
 	span.SetAttributes(gtrace.CommonLabels()...)
 
 	span.AddEvent(tracingEventGrpcRequest, trace.WithAttributes(

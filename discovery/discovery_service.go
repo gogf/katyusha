@@ -8,8 +8,8 @@ package discovery
 
 import (
 	"context"
-	"encoding/json"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -43,7 +43,7 @@ func newServiceFromKeyValue(key, value []byte) *Service {
 		Metadata:   make(g.Map),
 	}
 	if len(value) > 0 {
-		err := json.Unmarshal(value, &service.Metadata)
+		err := gjson.DecodeTo(value, &service.Metadata)
 		if err != nil {
 			g.Log().Error(context.TODO(), err)
 		}

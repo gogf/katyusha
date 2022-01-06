@@ -37,7 +37,11 @@ func (c krpcClient) NewGrpcClientConn(appID string, opts ...grpc.DialOption) (*g
 		grpcClientOptions = append(grpcClientOptions, opts...)
 	}
 	grpcClientOptions = append(grpcClientOptions, c.ChainUnary(
-		c.UnaryError,
+		c.internalUnaryError,
+		c.internalUnaryTracing,
+	))
+	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
+		c.internalStreamTracing,
 	))
 	conn, err := grpc.Dial(discovery.DefaultValue.Scheme+":///"+appID, grpcClientOptions...)
 	if err != nil {

@@ -15,8 +15,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// UnaryLogger is the default unary interceptor for logging purpose.
-func (s *GrpcServer) UnaryLogger(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+// internalUnaryLogger is the default unary interceptor for logging purpose.
+func (s *GrpcServer) internalUnaryLogger(
+	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) (interface{}, error) {
 	var (
 		start    = time.Now()
 		res, err = handler(ctx, req)

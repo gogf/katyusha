@@ -15,10 +15,8 @@ import (
 )
 
 const (
-	// BlWeight  .
-	BlWeight = "katyusha_balancer_weight"
-	// WeightKey .
-	WeightKey = "weight"
+	BlWeight  = "katyusha_balancer_weight" // BlWeight LB name.
+	weightKey = "weight"
 )
 
 var (
@@ -70,7 +68,7 @@ func getWeight(addr resolver.Address) int {
 	if addr.Attributes == nil {
 		return defaultWeight
 	}
-	if v := addr.Attributes.Value(WeightKey); v != nil {
+	if v := addr.Attributes.Value(weightKey); v != nil {
 		return gconv.Int(v)
 	}
 	return defaultWeight

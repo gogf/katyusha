@@ -66,9 +66,9 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	}
 	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			grpcServer.UnaryLogger,
-			s.UnaryError,
-			s.UnaryRecover,
+			grpcServer.internalUnaryLogger,
+			s.internalUnaryError,
+			s.internalUnaryRecover,
 		),
 	}, grpcServer.config.Options...)
 	grpcServer.Server = grpc.NewServer(grpcServer.config.Options...)
@@ -86,7 +86,7 @@ func (s krpcServer) randomPort() int {
 		if err != nil {
 			return i
 		} else {
-			conn.Close()
+			_ = conn.Close()
 		}
 	}
 	return randomPortNotAvailable
@@ -103,7 +103,10 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIP, err := gipv4.GetIntranetIp()
 		if err != nil {
-			s.Logger.Fatal(ctx, "retrieving intranet ip failed, please check your net card or manually assign the service address: "+err.Error())
+			s.Logger.Fatal(
+				ctx,
+				"retrieving intranet ip failed, please check your net card or manually assign the service address: "+err.Error(),
+			)
 		}
 		serviceAddress = fmt.Sprintf(`%s:%s`, intraIP, array[1])
 	} else {

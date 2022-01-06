@@ -7,13 +7,12 @@
 package main
 
 import (
+	"context"
 	"time"
 
+	"github.com/gogf/example/basic/protobuf"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
-	"golang.org/x/net/context"
-
-	"github.com/gogf/example/basic/protobuf"
 )
 
 func main() {

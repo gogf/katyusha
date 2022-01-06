@@ -3,7 +3,7 @@ module github.com/gogf/example
 go 1.16
 
 require (
-	github.com/gogf/gf/v2 v2.0.0-beta.0.20211127045941-5073413ffc0d
+	github.com/gogf/gf/v2 v2.0.0-rc.0.20220104132444-99455e328b35
 	github.com/gogf/katyusha v0.2.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/golang/protobuf v1.5.2
