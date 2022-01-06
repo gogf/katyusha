@@ -11,8 +11,9 @@ import (
 
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/gtime"
-	"github.com/gogf/katyusha/.examples/basic/protobuf"
 	"golang.org/x/net/context"
+
+	"github.com/gogf/example/basic/protobuf"
 )
 
 type Time struct{}

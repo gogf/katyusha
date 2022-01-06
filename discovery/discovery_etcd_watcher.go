@@ -127,7 +127,7 @@ func extractServices(resp *etcd3.GetResponse) []*Service {
 			services = append(services, service)
 		}
 	}
-	//g.Log().Debugf(`extractServices: %v`, services)
+	// g.Log().Debugf(`extractServices: %v`, services)
 	return services
 }
 

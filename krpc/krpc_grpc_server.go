@@ -22,8 +22,9 @@ import (
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
-	"github.com/gogf/katyusha/discovery"
 	"google.golang.org/grpc"
+
+	"github.com/gogf/katyusha/discovery"
 )
 
 // GrpcServer is the server for GRPC protocol.
@@ -76,12 +77,12 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 
 // randomPort returns a random port that is not used by other processes.
 func (s krpcServer) randomPort() int {
-	intranetIp, err := gipv4.GetIntranetIp()
+	intranetIP, err := gipv4.GetIntranetIp()
 	if err != nil {
 		panic(err)
 	}
 	for i := randomPortMin; i <= randomPortMax; i++ {
-		conn, err := net.Dial("tcp", fmt.Sprintf(`%s:%d`, intranetIp, i))
+		conn, err := net.Dial("tcp", fmt.Sprintf(`%s:%d`, intranetIP, i))
 		if err != nil {
 			return i
 		} else {
@@ -100,11 +101,11 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 		array          = gstr.Split(s.config.Address, ":")
 	)
 	if array[0] == "0.0.0.0" || array[0] == "" {
-		intraIp, err := gipv4.GetIntranetIp()
+		intraIP, err := gipv4.GetIntranetIp()
 		if err != nil {
 			s.Logger.Fatal(ctx, "retrieving intranet ip failed, please check your net card or manually assign the service address: "+err.Error())
 		}
-		serviceAddress = fmt.Sprintf(`%s:%s`, intraIp, array[1])
+		serviceAddress = fmt.Sprintf(`%s:%s`, intraIP, array[1])
 	} else {
 		serviceAddress = s.config.Address
 	}
@@ -129,18 +130,18 @@ func (s *GrpcServer) Run() {
 		s.Logger.Fatal(ctx, err)
 	}
 	if len(s.services) == 0 {
-		appId := gcmd.GetOptWithEnv(discovery.EnvKey.AppId).String()
-		if appId != "" {
+		appID := gcmd.GetOptWithEnv(discovery.EnvKey.AppID).String()
+		if appID != "" {
 			// Automatically creating service if app id can be retrieved
 			// from environment or command-line.
 			s.Service(&discovery.Service{
-				AppId: appId,
+				AppID: appID,
 			})
 		}
 		// Check any application identities bound with server.
-		if len(s.config.AppId) > 0 {
+		if len(s.config.AppID) > 0 {
 			s.Service(&discovery.Service{
-				AppId: s.config.AppId,
+				AppID: s.config.AppID,
 			})
 		}
 	}

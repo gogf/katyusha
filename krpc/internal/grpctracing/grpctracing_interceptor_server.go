@@ -11,9 +11,6 @@ import (
 
 	"github.com/gogf/gf/v2/net/gtrace"
 	"github.com/gogf/gf/v2/util/gconv"
-	"github.com/gogf/katyusha"
-	"github.com/gogf/katyusha/krpc/internal/grpcctx"
-	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/baggage"
@@ -23,15 +20,15 @@ import (
 	grpcCodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/gogf/katyusha"
+	"github.com/gogf/katyusha/krpc/internal/grpcctx"
+	"github.com/gogf/katyusha/krpc/internal/grpcutils"
 )
 
 // UnaryServerInterceptor returns a grpc.UnaryServerInterceptor suitable
 // for use in a grpc.NewServer call.
-func UnaryServerInterceptor(
-	ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler) (interface{}, error) {
+func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(katyusha.VERSION),
@@ -88,11 +85,7 @@ func UnaryServerInterceptor(
 
 // StreamServerInterceptor returns a grpc.StreamServerInterceptor suitable
 // for use in a grpc.NewServer call.
-func StreamServerInterceptor(
-	srv interface{},
-	ss grpc.ServerStream,
-	info *grpc.StreamServerInfo,
-	handler grpc.StreamHandler) error {
+func StreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 	tracer := otel.GetTracerProvider().Tracer(
 		tracingInstrumentGrpcServer,
 		trace.WithInstrumentationVersion(katyusha.VERSION),

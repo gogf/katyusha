@@ -8,11 +8,13 @@ package krpc_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/test/gtest"
-	"github.com/gogf/katyusha/krpc"
 	"google.golang.org/grpc/metadata"
-	"testing"
+
+	"github.com/gogf/katyusha/krpc"
 )
 
 func Test_Ctx_Basic(t *testing.T) {
