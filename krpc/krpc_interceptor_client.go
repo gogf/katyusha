@@ -33,7 +33,7 @@ func (c krpcClient) UnaryError(ctx context.Context, method string, req, reply in
 	return err
 }
 
-// UnaryTracing is an unary interceptor for adding tracing feature for gRPC client using OpenTelemetry.
+// UnaryTracing is a unary interceptor for adding tracing feature for gRPC client using OpenTelemetry.
 func (c krpcClient) UnaryTracing(
 	ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
