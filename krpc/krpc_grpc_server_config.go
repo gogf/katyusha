@@ -22,6 +22,7 @@ type GrpcServerConfig struct {
 	Logger           *glog.Logger        // (optional)  Logger for server.
 	LogPath          string              // (optional)  LogPath specifies the directory for storing logging files.
 	LogStdout        bool                // (optional)  LogStdout specifies whether printing logging content to stdout.
+	ErrorStack       bool                // (optional)  ErrorStack specifies whether logging stack information when error.
 	ErrorLogEnabled  bool                // (optional)  ErrorLogEnabled enables error logging content to files.
 	ErrorLogPattern  string              // (optional)  ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
 	AccessLogEnabled bool                // (optional)  AccessLogEnabled enables access logging content to file.

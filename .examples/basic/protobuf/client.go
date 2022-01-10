@@ -11,8 +11,7 @@ const (
 )
 
 type Client struct {
-	EchoClient
-	TimeClient
+	conn *grpc.ClientConn
 }
 
 func NewClient(options ...grpc.DialOption) (*Client, error) {
@@ -20,8 +19,13 @@ func NewClient(options ...grpc.DialOption) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{
-		EchoClient: NewEchoClient(conn),
-		TimeClient: NewTimeClient(conn),
-	}, nil
+	return &Client{conn: conn}, nil
+}
+
+func (c *Client) Echo() EchoClient {
+	return NewEchoClient(c.conn)
+}
+
+func (c *Client) Time() TimeClient {
+	return NewTimeClient(c.conn)
 }

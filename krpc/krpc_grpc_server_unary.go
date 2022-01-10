@@ -8,8 +8,11 @@ package krpc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gerror"
+	"github.com/gogf/gf/v2/text/gstr"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -25,38 +28,66 @@ func (s *GrpcServer) internalUnaryLogger(
 		duration = time.Since(start)
 	)
 	if err != nil {
-		var (
-			grpcCode    codes.Code
-			grpcMessage string
-		)
-		grpcStatus, ok := status.FromError(err)
-		if ok {
-			grpcCode = grpcStatus.Code()
-			grpcMessage = grpcStatus.Message()
-		} else {
-			grpcMessage = err.Error()
-		}
 		if s.config.ErrorLogEnabled {
-			s.Logger.Stack(false).
-				Stdout(s.config.LogStdout).
-				File(s.config.ErrorLogPattern).
-				Errorf(
-					ctx,
-					"%s, %.3fms, %+v, %+v, %d, %+v",
-					info.FullMethod, float64(duration)/1e6, req, res, grpcCode, grpcMessage,
-				)
+			var (
+				code          = gerror.Code(err)
+				codeDetail    = code.Detail()
+				codeDetailStr string
+				grpcCode      codes.Code
+				grpcMessage   string
+			)
+			if grpcStatus, ok := status.FromError(err); ok {
+				grpcCode = grpcStatus.Code()
+				grpcMessage = grpcStatus.Message()
+			}
+			if codeDetail != nil {
+				codeDetailStr = gstr.Replace(fmt.Sprintf(`%+v`, codeDetail), "\n", " ")
+			}
+			content := fmt.Sprintf(
+				`%s, %.3fms, %d, "%s", %+v, %+v, %d, "%s", "%s"`,
+				info.FullMethod, float64(duration)/1e6, grpcCode, grpcMessage,
+				req, res, code.Code(), code.Message(), codeDetailStr,
+			)
+			if s.config.ErrorStack {
+				if stack := gerror.Stack(err); stack != "" {
+					content += "\nStack:\n" + stack
+				} else {
+					content += ", " + err.Error()
+				}
+			} else {
+				content += ", " + err.Error()
+			}
+			s.Logger.Stack(false).Stdout(s.config.LogStdout).File(s.config.ErrorLogPattern).Error(ctx, content)
 		}
 	} else {
 		if s.config.AccessLogEnabled {
-			s.Logger.
-				Stdout(s.config.LogStdout).
-				File(s.config.AccessLogPattern).
-				Printf(
-					ctx,
-					"%s, %.3fms, %+v, %+v",
-					info.FullMethod, float64(duration)/1e6, req, res,
-				)
+			content := fmt.Sprintf(
+				"%s, %.3fms, %+v, %+v",
+				info.FullMethod, float64(duration)/1e6, req, res,
+			)
+			s.Logger.Stdout(s.config.LogStdout).File(s.config.AccessLogPattern).Print(ctx, content)
 		}
 	}
 	return res, err
+}
+
+// handleAccessLog handles the access logging for server.
+func (s *GrpcServer) handleAccessLog(
+	ctx context.Context, duration time.Duration, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) {
+	if !s.config.AccessLogEnabled {
+		return
+	}
+
+}
+
+// handleErrorLog handles the error logging for server.
+func (s *GrpcServer) handleErrorLog(
+	ctx context.Context, err error, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
+) {
+	// It does nothing if error logging is custom disabled.
+	if !s.config.ErrorLogEnabled {
+		return
+	}
+
 }

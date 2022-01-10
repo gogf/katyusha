@@ -66,9 +66,13 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 	}
 	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			grpcServer.internalUnaryLogger,
-			s.internalUnaryError,
 			s.internalUnaryRecover,
+			s.internalUnaryTracing,
+			s.internalUnaryError,
+			grpcServer.internalUnaryLogger,
+		),
+		s.ChainStream(
+			s.internalStreamTracing,
 		),
 	}, grpcServer.config.Options...)
 	grpcServer.Server = grpc.NewServer(grpcServer.config.Options...)

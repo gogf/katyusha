@@ -7,8 +7,8 @@
 package main
 
 import (
-	"github.com/gogf/example/basic/protobuf"
-	"github.com/gogf/example/basic/service"
+	"github.com/gogf/katyusha/.examples/basic/protobuf"
+	"github.com/gogf/katyusha/.examples/basic/service"
 	"github.com/gogf/katyusha/krpc"
 )
 

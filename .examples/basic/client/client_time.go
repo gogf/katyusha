@@ -7,12 +7,11 @@
 package main
 
 import (
-	"context"
 	"time"
 
-	"github.com/gogf/example/basic/protobuf"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/katyusha/.examples/basic/protobuf"
 )
 
 func main() {
@@ -23,8 +22,9 @@ func main() {
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
+
 	for i := 0; i < 500; i++ {
-		res, err := client.TimeClient.Now(context.Background(), &protobuf.NowReq{})
+		res, err := client.Time().Now(ctx, &protobuf.NowReq{})
 		if err != nil {
 			g.Log().Error(ctx, err)
 			time.Sleep(time.Second)

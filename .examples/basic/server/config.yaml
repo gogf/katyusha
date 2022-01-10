@@ -6,4 +6,5 @@ grpcserver:
     logStdout:        true
     errorLogEnabled:  true
     accessLogEnabled: true
+    errorStack: true
 

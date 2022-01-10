@@ -7,12 +7,9 @@
 package main
 
 import (
-	"context"
-	"time"
-
-	"github.com/gogf/example/basic/protobuf"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/katyusha/.examples/basic/protobuf"
 )
 
 // go run client_echo.go
@@ -24,14 +21,11 @@ func main() {
 	if err != nil {
 		g.Log().Fatal(ctx, err)
 	}
-	for i := 0; i < 500; i++ {
-		res, err := client.EchoClient.Say(context.Background(), &protobuf.SayReq{Content: "Hello"})
-		if err != nil {
-			g.Log().Error(ctx, err)
-			time.Sleep(time.Second)
-			continue
-		}
-		time.Sleep(time.Second)
-		g.Log().Print(ctx, "Response:", res.Content)
+
+	res, err := client.Echo().Say(ctx, &protobuf.SayReq{Content: "Hello"})
+	if err != nil {
+		g.Log().Error(ctx, err)
+		return
 	}
+	g.Log().Print(ctx, "Response:", res.Content)
 }
