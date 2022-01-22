@@ -9,7 +9,9 @@ package discovery
 import (
 	"time"
 
+	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gcmd"
 )
 
 // Discovery interface for service.
@@ -62,3 +64,57 @@ const (
 	configNodeNameDiscovery = "discovery"
 	configNodeNameService   = "service"
 )
+
+// SetDefault sets the default Discovery implements as your own implemented interface.
+// This configuration function should be called before using function `Register`.
+func SetDefault(discovery Discovery) {
+	if discovery == nil {
+		panic(gerror.New(`invalid discovery value "nil" given`))
+	}
+	defaultDiscovery = discovery
+}
+
+// Register registers `service` to ETCD.
+func Register(service *Service) error {
+	if err := initDefaultDiscovery(); err != nil {
+		return err
+	}
+	return defaultDiscovery.Register(service)
+}
+
+// Services returns all registered service list.
+func Services() ([]*Service, error) {
+	return defaultDiscovery.Services()
+}
+
+// Unregister removes `service` from ETCD.
+func Unregister(service *Service) error {
+	if err := initDefaultDiscovery(); err != nil {
+		return err
+	}
+	return defaultDiscovery.Unregister(service)
+}
+
+// Close closes the default Registry for gracefully shutdown purpose.
+func Close() error {
+	if err := initDefaultDiscovery(); err != nil {
+		return err
+	}
+	return defaultDiscovery.Close()
+}
+
+// initDefaultDiscovery lazily initializes the local register object.
+func initDefaultDiscovery() error {
+	if defaultDiscovery != nil {
+		return nil
+	}
+	client, err := getEtcdClient()
+	if err != nil {
+		return err
+	}
+	defaultDiscovery = &etcdDiscovery{
+		etcd3Client:  client,
+		keepaliveTTL: gcmd.GetOptWithEnv(EnvKeepAlive, DefaultKeepAlive).Duration(),
+	}
+	return nil
+}

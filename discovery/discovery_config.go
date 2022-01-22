@@ -8,9 +8,9 @@ package discovery
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/gogf/gf/v2/container/gtype"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/genv"
 	"github.com/gogf/gf/v2/text/gstr"
@@ -21,38 +21,48 @@ var (
 	initializedFromConfig = gtype.NewBool()
 )
 
+// SetConfig sets the discovery configuration using Config.
+func SetConfig(config *Config) error {
+	if err := setDiscoveryConfigToEnvironment(config); err != nil {
+		return err
+	}
+	return nil
+}
+
 // InitDiscoveryFromConfig automatically checks and initializes discovery feature
 // from configuration.
 func InitDiscoveryFromConfig() error {
 	if !initializedFromConfig.Cas(false, true) {
 		return nil
 	}
-	var ctx = context.TODO()
+	var (
+		config  *Config
+		service *Service
+		ctx     = context.TODO()
+	)
 	// Configuration: discovery
 	configDiscovery, err := g.Cfg().Get(ctx, configNodeNameDiscovery)
 	if err != nil {
 		return err
 	}
 	if !configDiscovery.IsNil() {
-		var (
-			config  *Config
-			service *Service
-		)
 		// Discovery.
 		if err = configDiscovery.Struct(&config); err != nil {
 			return err
 		}
-		if err = discoveryConfigToEnvironment(config); err != nil {
+		if err = setDiscoveryConfigToEnvironment(config); err != nil {
 			return err
 		}
-
 		// Service.
 		if err = configDiscovery.Struct(&service); err != nil {
 			return err
 		}
-		if err = serviceConfigToEnvironment(service); err != nil {
+		if err = setServiceConfigToEnvironment(service); err != nil {
 			return err
 		}
+	}
+	if len(config.Endpoints) == 0 {
+		g.Log().Fatal(ctx, `endpoints configuration not found for discovery`)
 	}
 	// Configuration: service
 	configService, err := g.Cfg().Get(ctx, configNodeNameService)
@@ -67,19 +77,16 @@ func InitDiscoveryFromConfig() error {
 			if err = configService.Structs(&services); err != nil {
 				return err
 			}
-			for _, service := range services {
-				if err = serviceConfigToEnvironment(service); err != nil {
+			for _, s := range services {
+				if err = setServiceConfigToEnvironment(s); err != nil {
 					return err
 				}
 			}
 		} else {
-			var (
-				service *Service
-			)
 			if err = configService.Struct(&service); err != nil {
 				return err
 			}
-			if err = serviceConfigToEnvironment(service); err != nil {
+			if err = setServiceConfigToEnvironment(service); err != nil {
 				return err
 			}
 		}
@@ -87,16 +94,8 @@ func InitDiscoveryFromConfig() error {
 	return nil
 }
 
-// SetConfig sets the discovery configuration using Config.
-func SetConfig(config *Config) error {
-	if err := discoveryConfigToEnvironment(config); err != nil {
-		return err
-	}
-	return nil
-}
-
-// discoveryConfigToEnvironment sets the discovery environment value with Config object.
-func discoveryConfigToEnvironment(config *Config) error {
+// setDiscoveryConfigToEnvironment sets the discovery environment value with Config object.
+func setDiscoveryConfigToEnvironment(config *Config) error {
 	if config == nil {
 		return nil
 	}
@@ -118,8 +117,8 @@ func discoveryConfigToEnvironment(config *Config) error {
 	return nil
 }
 
-// serviceConfigToEnvironment sets the service environment value with Service object.
-func serviceConfigToEnvironment(service *Service) error {
+// setServiceConfigToEnvironment sets the service environment value with Service object.
+func setServiceConfigToEnvironment(service *Service) error {
 	if service == nil {
 		return nil
 	}
@@ -149,7 +148,7 @@ func serviceConfigToEnvironment(service *Service) error {
 		}
 	}
 	if len(service.Metadata) > 0 {
-		b, _ := json.Marshal(service.Metadata)
+		b, _ := gjson.Marshal(service.Metadata)
 		if err := genv.Set(EnvMetadata, string(b)); err != nil {
 			return err
 		}

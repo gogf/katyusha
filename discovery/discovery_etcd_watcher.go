@@ -42,9 +42,7 @@ func newEtcdWatcher(etcdClient *etcd3.Client, key string) *etcdWatcher {
 
 // Watch keeps watching the registered prefix key events.
 func (w *etcdWatcher) Watch() chan []resolver.Address {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	w.initializeAddresses()
 	addressCh := make(chan []resolver.Address, 10)
 	w.waitGroup.Add(1)

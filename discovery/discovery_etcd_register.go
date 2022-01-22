@@ -7,10 +7,10 @@
 package discovery
 
 import (
-	"encoding/json"
 	"sync"
 	"time"
 
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcmd"
@@ -31,62 +31,9 @@ var (
 	defaultDiscovery Discovery
 )
 
-// SetDefault sets the default Discovery implements as your own implemented interface.
-// This configuration function should be called before using function `Register`.
-func SetDefault(discovery Discovery) {
-	defaultDiscovery = discovery
-}
-
-// initDefaultDiscovery lazily initializes the local register object.
-func initDefaultDiscovery() error {
-	if defaultDiscovery != nil {
-		return nil
-	}
-	client, err := getEtcdClient()
-	if err != nil {
-		return err
-	}
-	defaultDiscovery = &etcdDiscovery{
-		etcd3Client:  client,
-		keepaliveTTL: gcmd.GetOptWithEnv(EnvKeepAlive, DefaultKeepAlive).Duration(),
-	}
-	return nil
-}
-
-// Register registers `service` to ETCD.
-func Register(service *Service) error {
-	if err := initDefaultDiscovery(); err != nil {
-		return err
-	}
-	return defaultDiscovery.Register(service)
-}
-
-// Services returns all registered service list.
-func Services() ([]*Service, error) {
-	return defaultDiscovery.Services()
-}
-
-// Unregister removes `service` from ETCD.
-func Unregister(service *Service) error {
-	if err := initDefaultDiscovery(); err != nil {
-		return err
-	}
-	return defaultDiscovery.Unregister(service)
-}
-
-// Close closes the default Registry for gracefully shutdown purpose.
-func Close() error {
-	if err := initDefaultDiscovery(); err != nil {
-		return err
-	}
-	return defaultDiscovery.Close()
-}
-
 // Register registers `service` to ETCD.
 func (r *etcdDiscovery) Register(service *Service) error {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	// Necessary.
 	if service.AppID == "" {
 		service.AppID = gcmd.GetOptWithEnv(EnvAppID).String()
@@ -113,7 +60,7 @@ func (r *etcdDiscovery) Register(service *Service) error {
 	if len(service.Metadata) == 0 {
 		service.Metadata = gcmd.GetOptWithEnv(EnvMetadata).Map()
 	}
-	metadataMarshalBytes, err := json.Marshal(service.Metadata)
+	metadataMarshalBytes, err := gjson.Marshal(service.Metadata)
 	if err != nil {
 		return err
 	}
@@ -130,7 +77,9 @@ func (r *etcdDiscovery) Register(service *Service) error {
 	}
 	g.Log().Debugf(ctx, `service registered lease id: %d, metadata: %s`, resp.ID, metadataMarshalStr)
 	r.etcdGrantID = resp.ID
-	if _, err := r.etcd3Client.Put(context.Background(), serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantID)); err != nil {
+	if _, err = r.etcd3Client.Put(
+		ctx, serviceRegisterKey, metadataMarshalStr, etcd3.WithLease(r.etcdGrantID),
+	); err != nil {
 		return err
 	}
 	g.Log().Debugf(ctx, `service request keepalive for grant id: %d`, resp.ID)
@@ -145,9 +94,7 @@ func (r *etcdDiscovery) Register(service *Service) error {
 
 // keepAlive continuously keeps alive the lease from ETCD.
 func (r *etcdDiscovery) keepAlive(service *Service, keepAliceCh <-chan *etcd3.LeaseKeepAliveResponse) {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	for {
 		select {
 		case <-r.etcd3Client.Ctx().Done():
@@ -174,7 +121,6 @@ func (r *etcdDiscovery) Services() ([]*Service, error) {
 
 // Unregister removes `service` from ETCD.
 func (r *etcdDiscovery) Unregister(service *Service) error {
-	// g.Log().Debugf(`discovery.Unregister: %s`, service.AppID)
 	_, err := r.etcd3Client.Revoke(context.Background(), r.etcdGrantID)
 	return err
 }

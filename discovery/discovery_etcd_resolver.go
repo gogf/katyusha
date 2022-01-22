@@ -29,7 +29,9 @@ func init() {
 }
 
 // Build implements interface google.golang.org/grpc/resolver.Builder.
-func (r *etcdBuilder) Build(target resolver.Target, clientConn resolver.ClientConn, options resolver.BuildOptions) (resolver.Resolver, error) {
+func (r *etcdBuilder) Build(
+	target resolver.Target, clientConn resolver.ClientConn, options resolver.BuildOptions,
+) (resolver.Resolver, error) {
 	var (
 		err error
 		ctx = context.TODO()

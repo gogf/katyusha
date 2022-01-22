@@ -89,9 +89,10 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIP, err := gipv4.GetIntranetIp()
 		if err != nil {
-			s.config.Logger.Fatal(
+			s.config.Logger.Fatalf(
 				ctx,
-				"retrieving intranet ip failed, please check your net card or manually assign the service address: "+err.Error(),
+				"retrieving intranet ip failed, please check your net card or manually assign the service address: %+v",
+				err,
 			)
 		}
 		serviceAddress = fmt.Sprintf(`%s:%s`, intraIP, array[1])
@@ -108,12 +109,12 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
+	// Initialize discovery.
 	if err := discovery.InitDiscoveryFromConfig(); err != nil {
 		s.config.Logger.Fatal(ctx, err)
 	}
+	// Initialize services configured.
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.config.Logger.Fatal(ctx, err)
