@@ -18,8 +18,8 @@ type (
 const (
 	configNodeNameGrpcServer = "grpcserver"
 	configNodeNameHttpServer = "httpserver"
-	randomPortMin            = 8000
-	randomPortMax            = 9999
+	randomPortMin            = 10000
+	randomPortMax            = 30000
 	randomPortNotAvailable   = -1
 )
 

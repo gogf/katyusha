@@ -18,6 +18,7 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
@@ -30,7 +31,6 @@ import (
 // GrpcServer is the server for GRPC protocol.
 type GrpcServer struct {
 	Server    *grpc.Server
-	Logger    *glog.Logger
 	config    *GrpcServerConfig
 	services  []*discovery.Service
 	waitGroup sync.WaitGroup
@@ -48,9 +48,9 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config = s.NewGrpcServerConfig()
 	}
 	if config.Address == "" {
-		randomPort := s.randomPort()
-		if randomPort == randomPortNotAvailable {
-			g.Log().Fatal(ctx, "server address is empty and random port retrieving failed")
+		randomPort, err := gtcp.GetFreePort()
+		if err != nil {
+			g.Log().Fatalf(ctx, `%+v`, err)
 		}
 		config.Address = fmt.Sprintf(`:%d`, randomPort)
 	}
@@ -61,39 +61,21 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 		config.Logger = glog.New()
 	}
 	grpcServer := &GrpcServer{
-		Logger: config.Logger,
 		config: config,
 	}
 	grpcServer.config.Options = append([]grpc.ServerOption{
 		s.ChainUnary(
-			s.internalUnaryRecover,
-			s.internalUnaryTracing,
-			s.internalUnaryError,
-			grpcServer.internalUnaryLogger,
+			s.UnaryRecover,
+			s.UnaryTracing,
+			s.UnaryError,
+			grpcServer.UnaryLogger,
 		),
 		s.ChainStream(
-			s.internalStreamTracing,
+			s.StreamTracing,
 		),
 	}, grpcServer.config.Options...)
 	grpcServer.Server = grpc.NewServer(grpcServer.config.Options...)
 	return grpcServer
-}
-
-// randomPort returns a random port that is not used by other processes.
-func (s krpcServer) randomPort() int {
-	intranetIP, err := gipv4.GetIntranetIp()
-	if err != nil {
-		panic(err)
-	}
-	for i := randomPortMin; i <= randomPortMax; i++ {
-		conn, err := net.Dial("tcp", fmt.Sprintf(`%s:%d`, intranetIP, i))
-		if err != nil {
-			return i
-		} else {
-			_ = conn.Close()
-		}
-	}
-	return randomPortNotAvailable
 }
 
 // Service binds service list to current server.
@@ -107,7 +89,7 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 	if array[0] == "0.0.0.0" || array[0] == "" {
 		intraIP, err := gipv4.GetIntranetIp()
 		if err != nil {
-			s.Logger.Fatal(
+			s.config.Logger.Fatal(
 				ctx,
 				"retrieving intranet ip failed, please check your net card or manually assign the service address: "+err.Error(),
 			)
@@ -130,14 +112,14 @@ func (s *GrpcServer) Run() {
 		ctx = context.TODO()
 	)
 	if err := discovery.InitDiscoveryFromConfig(); err != nil {
-		s.Logger.Fatal(ctx, err)
+		s.config.Logger.Fatal(ctx, err)
 	}
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
-		s.Logger.Fatal(ctx, err)
+		s.config.Logger.Fatal(ctx, err)
 	}
 	if len(s.services) == 0 {
-		appID := gcmd.GetOptWithEnv(discovery.EnvKey.AppID).String()
+		appID := gcmd.GetOptWithEnv(discovery.EnvAppID).String()
 		if appID != "" {
 			// Automatically creating service if app id can be retrieved
 			// from environment or command-line.
@@ -155,18 +137,18 @@ func (s *GrpcServer) Run() {
 	// Start listening.
 	go func() {
 		if err = s.Server.Serve(listener); err != nil {
-			s.Logger.Fatal(ctx, err)
+			s.config.Logger.Fatal(ctx, err)
 		}
 	}()
 
 	// Register service list after server starts.
 	for _, service := range s.services {
 		if err = discovery.Register(service); err != nil {
-			s.Logger.Fatal(ctx, err)
+			s.config.Logger.Fatal(ctx, err)
 		}
 	}
 
-	s.Logger.Printf(ctx, "grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
+	s.config.Logger.Printf(ctx, "grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
 
 	// Signal listening and handling for gracefully shutdown.
 	sigChan := make(chan os.Signal, 1)
@@ -187,7 +169,7 @@ func (s *GrpcServer) Run() {
 			syscall.SIGKILL,
 			syscall.SIGTERM,
 			syscall.SIGABRT:
-			s.Logger.Printf(ctx, "signal received: %s, gracefully shutting down", sig.String())
+			s.config.Logger.Printf(ctx, "signal received: %s, gracefully shutting down", sig.String())
 			for _, service := range s.services {
 				_ = discovery.Unregister(service)
 			}

@@ -1,10 +1,11 @@
 discovery:
-    endpoints: ["127.0.0.1:2379"]
+  endpoints: ["127.0.0.1:2379"]
 
 grpcserver:
-    logPath:          "./log"
-    logStdout:        true
-    errorLogEnabled:  true
-    accessLogEnabled: true
-    errorStack: true
+  appID:            "demo"
+  logPath:          "./log"
+  logStdout:        true
+  errorLogEnabled:  true
+  accessLogEnabled: true
+  errorStack:       true
 

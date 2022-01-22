@@ -13,10 +13,7 @@ import (
 )
 
 func main() {
-	c := krpc.Server.NewGrpcServerConfig()
-	c.AppID = protobuf.AppID
-
-	s := krpc.Server.NewGrpcServer(c)
+	s := krpc.Server.NewGrpcServer()
 	protobuf.RegisterEchoServer(s.Server, new(service.Echo))
 	protobuf.RegisterTimeServer(s.Server, new(service.Time))
 	s.Run()

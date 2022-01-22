@@ -18,8 +18,8 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// internalUnaryLogger is the default unary interceptor for logging purpose.
-func (s *GrpcServer) internalUnaryLogger(
+// UnaryLogger is the default unary interceptor for logging purpose.
+func (s *GrpcServer) UnaryLogger(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (interface{}, error) {
 	var (
@@ -57,7 +57,7 @@ func (s *GrpcServer) internalUnaryLogger(
 			} else {
 				content += ", " + err.Error()
 			}
-			s.Logger.Stack(false).Stdout(s.config.LogStdout).File(s.config.ErrorLogPattern).Error(ctx, content)
+			s.config.Logger.Stack(false).Stdout(s.config.LogStdout).File(s.config.ErrorLogPattern).Error(ctx, content)
 		}
 	} else {
 		if s.config.AccessLogEnabled {
@@ -65,7 +65,7 @@ func (s *GrpcServer) internalUnaryLogger(
 				"%s, %.3fms, %+v, %+v",
 				info.FullMethod, float64(duration)/1e6, req, res,
 			)
-			s.Logger.Stdout(s.config.LogStdout).File(s.config.AccessLogPattern).Print(ctx, content)
+			s.config.Logger.Stdout(s.config.LogStdout).File(s.config.AccessLogPattern).Print(ctx, content)
 		}
 	}
 	return res, err
@@ -78,7 +78,6 @@ func (s *GrpcServer) handleAccessLog(
 	if !s.config.AccessLogEnabled {
 		return
 	}
-
 }
 
 // handleErrorLog handles the error logging for server.

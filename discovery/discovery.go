@@ -37,53 +37,28 @@ type Service struct {
 	Metadata   g.Map  // (optional)  Custom data for this service, which can be set using JSON by environment or command-line.
 }
 
-type discoveryEnvKey struct {
-	PrefixRoot string
-	KeepAlive  string
-	AppID      string
-	Address    string
-	Version    string
-	Deployment string
-	Group      string
-	Metadata   string
-	Endpoints  string
-}
+const (
+	EnvPrefixRoot = "KA_PREFIX_ROOT"
+	EnvKeepAlive  = "KA_KEEPALIVE"
+	EnvAppID      = "KA_APP_ID"
+	EnvAddress    = "KA_ADDRESS"
+	EnvVersion    = "KA_VERSION"
+	EnvDeployment = "KA_DEPLOYMENT"
+	EnvGroup      = "KA_GROUP"
+	EnvMetadata   = "KA_METADATA"
+	EnvEndpoints  = "KA_ENDPOINTS"
+)
 
-type discoveryDefaultValue struct {
-	PrefixRoot string
-	KeepAlive  time.Duration
-	Version    string
-	Deployment string
-	Group      string
-	Scheme     string
-}
+const (
+	DefaultPrefixRoot = "/katyusha"
+	DefaultKeepAlive  = 10 * time.Second
+	DefaultVersion    = "v0.0.0"
+	DefaultDeployment = "default"
+	DefaultGroup      = "default"
+	DefaultScheme     = "katyusha"
+)
 
 const (
 	configNodeNameDiscovery = "discovery"
 	configNodeNameService   = "service"
-)
-
-var (
-	// EnvKey .Environment variable key
-	EnvKey = discoveryEnvKey{
-		PrefixRoot: "KA_PREFIX_ROOT",
-		KeepAlive:  "KA_KEEPALIVE",
-		AppID:      "KA_APP_ID",
-		Address:    "KA_ADDRESS",
-		Version:    "KA_VERSION",
-		Deployment: "KA_DEPLOYMENT",
-		Group:      "KA_GROUP",
-		Metadata:   "KA_METADATA",
-		Endpoints:  "KA_ENDPOINTS",
-	}
-
-	// DefaultValue the default value of the environment variable key
-	DefaultValue = discoveryDefaultValue{
-		PrefixRoot: "/katyusha",
-		KeepAlive:  10 * time.Second,
-		Version:    "v0.0.0",
-		Deployment: "default",
-		Group:      "default",
-		Scheme:     "katyusha",
-	}
 )

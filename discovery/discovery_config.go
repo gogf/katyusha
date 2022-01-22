@@ -27,9 +27,7 @@ func InitDiscoveryFromConfig() error {
 	if !initializedFromConfig.Cas(false, true) {
 		return nil
 	}
-	var (
-		ctx = context.TODO()
-	)
+	var ctx = context.TODO()
 	// Configuration: discovery
 	configDiscovery, err := g.Cfg().Get(ctx, configNodeNameDiscovery)
 	if err != nil {
@@ -103,17 +101,17 @@ func discoveryConfigToEnvironment(config *Config) error {
 		return nil
 	}
 	if len(config.Endpoints) > 0 {
-		if err := genv.Set(EnvKey.Endpoints, gstr.Join(config.Endpoints, ",")); err != nil {
+		if err := genv.Set(EnvEndpoints, gstr.Join(config.Endpoints, ",")); err != nil {
 			return err
 		}
 	}
 	if config.KeepAlive > 0 {
-		if err := genv.Set(EnvKey.KeepAlive, config.KeepAlive.String()); err != nil {
+		if err := genv.Set(EnvKeepAlive, config.KeepAlive.String()); err != nil {
 			return err
 		}
 	}
 	if config.PrefixRoot != "" {
-		if err := genv.Set(EnvKey.PrefixRoot, config.PrefixRoot); err != nil {
+		if err := genv.Set(EnvPrefixRoot, config.PrefixRoot); err != nil {
 			return err
 		}
 	}
@@ -126,33 +124,33 @@ func serviceConfigToEnvironment(service *Service) error {
 		return nil
 	}
 	if service.AppID != "" {
-		if err := genv.Set(EnvKey.AppID, service.AppID); err != nil {
+		if err := genv.Set(EnvAppID, service.AppID); err != nil {
 			return err
 		}
 	}
 	if service.Address != "" {
-		if err := genv.Set(EnvKey.Address, service.Address); err != nil {
+		if err := genv.Set(EnvAddress, service.Address); err != nil {
 			return err
 		}
 	}
 	if service.Version != "" {
-		if err := genv.Set(EnvKey.Version, service.Version); err != nil {
+		if err := genv.Set(EnvVersion, service.Version); err != nil {
 			return err
 		}
 	}
 	if service.Group != "" {
-		if err := genv.Set(EnvKey.Group, service.Group); err != nil {
+		if err := genv.Set(EnvGroup, service.Group); err != nil {
 			return err
 		}
 	}
 	if service.Deployment != "" {
-		if err := genv.Set(EnvKey.Deployment, service.Deployment); err != nil {
+		if err := genv.Set(EnvDeployment, service.Deployment); err != nil {
 			return err
 		}
 	}
 	if len(service.Metadata) > 0 {
 		b, _ := json.Marshal(service.Metadata)
-		if err := genv.Set(EnvKey.Metadata, string(b)); err != nil {
+		if err := genv.Set(EnvMetadata, string(b)); err != nil {
 			return err
 		}
 	}

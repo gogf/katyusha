@@ -64,6 +64,14 @@ github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg78
 github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/gogf/gf/v2 v2.0.0-rc.0.20220104132444-99455e328b35 h1:ne2Ihy5aYeg2b0kSQVxgBdocv7UNrB/qUaD2iGy4G0g=
 github.com/gogf/gf/v2 v2.0.0-rc.0.20220104132444-99455e328b35/go.mod h1:apktt6TleWtCIwpz63vBqUnw8MX8gWKoZyxgDpXFtgM=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122054809-65d1648c304e h1:UkLyNkzCQ1Zb6zrveLTLvIcyjCnRCJKk7lrnBrKKNDk=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122054809-65d1648c304e/go.mod h1:apktt6TleWtCIwpz63vBqUnw8MX8gWKoZyxgDpXFtgM=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122071258-9e3a49dd1b23 h1:M5aZ4RD5AWqP9AUKcWLK/l8DQanFUUYRpOSJ028fZ18=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122071258-9e3a49dd1b23/go.mod h1:apktt6TleWtCIwpz63vBqUnw8MX8gWKoZyxgDpXFtgM=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122073331-3b811c343478 h1:Q21ix0Cl4pw+OpN1U4ib5GG0rDWVP+1z7tSEmagKZ0s=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122073331-3b811c343478/go.mod h1:apktt6TleWtCIwpz63vBqUnw8MX8gWKoZyxgDpXFtgM=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122074538-e517bf7b0e8d h1:wdYf4CiGSwtig3ocbyFzAQKsWb9QzUxUDo/9fW02MwA=
+github.com/gogf/gf/v2 v2.0.0-rc.0.20220122074538-e517bf7b0e8d/go.mod h1:apktt6TleWtCIwpz63vBqUnw8MX8gWKoZyxgDpXFtgM=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=

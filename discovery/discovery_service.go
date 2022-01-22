@@ -19,7 +19,7 @@ import (
 // for registering.
 func (s *Service) RegisterKey() string {
 	return gstr.Join([]string{
-		gcmd.GetOptWithEnv(EnvKey.PrefixRoot, DefaultValue.PrefixRoot).String(),
+		gcmd.GetOptWithEnv(EnvPrefixRoot, DefaultPrefixRoot).String(),
 		s.Deployment,
 		s.Group,
 		s.AppID,
