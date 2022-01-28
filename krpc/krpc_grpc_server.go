@@ -107,31 +107,71 @@ func (s *GrpcServer) Service(services ...*gsvc.Service) {
 
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
+	autoLoadAndRegisterEtcdRegistry()
+
 	var ctx = context.TODO()
 	// Initialize services configured.
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
-		s.config.Logger.Fatal(ctx, err)
+		s.config.Logger.Fatalf(ctx, `%+v`, err)
 	}
 
 	// Start listening.
 	go func() {
 		if err = s.Server.Serve(listener); err != nil {
-			s.config.Logger.Fatal(ctx, err)
+			s.config.Logger.Fatalf(ctx, `%+v`, err)
 		}
 	}()
 
+	if len(s.services) == 0 {
+		s.services = []*gsvc.Service{s.newDefaultService()}
+	}
+
 	// Register service list after server starts.
 	for _, service := range s.services {
+		s.config.Logger.Debugf(ctx, `service register: %+v`, service)
 		if err = gsvc.Register(ctx, service); err != nil {
-			s.config.Logger.Fatal(ctx, err)
+			s.config.Logger.Fatalf(ctx, `%+v`, err)
 		}
 	}
 
-	s.config.Logger.Printf(ctx, "grpc server start listening on: %s, pid: %d", s.config.Address, gproc.Pid())
+	s.config.Logger.Printf(
+		ctx,
+		"grpc server start listening on: %s, pid: %d",
+		s.config.Address, gproc.Pid(),
+	)
+	s.doSignalListen()
+}
 
-	// Signal listening and handling for gracefully shutdown.
-	sigChan := make(chan os.Signal, 1)
+func (s *GrpcServer) newDefaultService() *gsvc.Service {
+	var (
+		protocol = `grpc`
+		address  = s.config.Address
+	)
+	var (
+		array = gstr.Split(address, ":")
+		ip    = array[0]
+		port  = array[1]
+	)
+	if ip == "" {
+		ip = gipv4.MustGetIntranetIp()
+	}
+	metadata := gsvc.Metadata{
+		gsvc.MDProtocol: protocol,
+	}
+	return &gsvc.Service{
+		Name:      s.config.Name,
+		Endpoints: []string{fmt.Sprintf(`%s:%s`, ip, port)},
+		Metadata:  metadata,
+	}
+}
+
+// doSignalListen does signal listening and handling for gracefully shutdown.
+func (s *GrpcServer) doSignalListen() {
+	var (
+		ctx     = context.Background()
+		sigChan = make(chan os.Signal, 1)
+	)
 	signal.Notify(
 		sigChan,
 		syscall.SIGINT,
@@ -149,9 +189,12 @@ func (s *GrpcServer) Run() {
 			syscall.SIGKILL,
 			syscall.SIGTERM,
 			syscall.SIGABRT:
-			s.config.Logger.Printf(ctx, "signal received: %s, gracefully shutting down", sig.String())
+			s.config.Logger.Infof(ctx, "signal received: %s, gracefully shutting down", sig.String())
 			for _, service := range s.services {
-				_ = gsvc.Deregister(ctx, service)
+				s.config.Logger.Debugf(ctx, `service deregister: %+v`, service)
+				if err := gsvc.Deregister(ctx, service); err != nil {
+					s.config.Logger.Errorf(ctx, `%+v`, err)
+				}
 			}
 			time.Sleep(time.Second)
 			s.Stop()

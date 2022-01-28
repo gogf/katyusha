@@ -20,17 +20,15 @@ func main() {
 		client, err = protobuf.NewClient()
 	)
 	if err != nil {
-		g.Log().Fatal(ctx, err)
+		g.Log().Fatalf(ctx, `%+v`, err)
 	}
-
-	for i := 0; i < 500; i++ {
-		res, err := client.Time().Now(ctx, &protobuf.NowReq{})
+	for i := 0; i < 100; i++ {
+		res, err := client.Echo().Say(ctx, &protobuf.SayReq{Content: "Hello"})
 		if err != nil {
 			g.Log().Error(ctx, err)
-			time.Sleep(time.Second)
-			continue
+			return
 		}
+		g.Log().Print(ctx, "Response:", res.Content)
 		time.Sleep(time.Second)
-		g.Log().Print(ctx, "Time:", res.Time)
 	}
 }

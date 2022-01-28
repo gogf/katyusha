@@ -85,6 +85,7 @@ github.com/gogf/gf/contrib/registry/etcd/v2 v2.0.0-20220128082344-48b5f3789470/g
 github.com/gogf/gf/v2 v2.0.0-rc2/go.mod h1:apktt6TleWtCIwpz63vBqUnw8MX8gWKoZyxgDpXFtgM=
 github.com/gogf/gf/v2 v2.0.0-rc2.0.20220128082344-48b5f3789470 h1:wPatnjVak04kbsFTuiVzS6+ODVle3j5j64YI/vY65Zw=
 github.com/gogf/gf/v2 v2.0.0-rc2.0.20220128082344-48b5f3789470/go.mod h1:wuTytvEeoPIPsc47sAT9SAQ35ipST+ZyJu5oX4X3TGA=
+github.com/gogf/katyusha/example v0.0.0-20220128090236-a633147589ae/go.mod h1:DSPRXlHUWIRpXa2v8eKpVh0eGwdCiqXBng3wnn8B62g=
 github.com/gogo/protobuf v1.1.1/go.mod h1:r8qH/GZQm5c6nD/R0oafs1akxWv10x8SbQlK7atdtwQ=
 github.com/gogo/protobuf v1.3.2 h1:Ov1cvc58UF3b5XjBnZv7+opcTcQFZebYjWzi34vdm4Q=
 github.com/gogo/protobuf v1.3.2/go.mod h1:P1XiOD3dCwIKUDQYPy72D8LYyHL2YPYrpS2s69NZV8Q=

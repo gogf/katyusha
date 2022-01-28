@@ -7,6 +7,8 @@
 package krpc
 
 import (
+	"time"
+
 	"github.com/gogf/katyusha/krpc/internal/grpcctx"
 )
 
@@ -16,11 +18,10 @@ type (
 )
 
 const (
-	configNodeNameGrpcServer = "grpcserver"
-	configNodeNameHttpServer = "httpserver"
-	randomPortMin            = 10000
-	randomPortMax            = 30000
-	randomPortNotAvailable   = -1
+	defaultServerName        = `default`
+	defaultTimeout           = 5 * time.Second
+	configNodeNameRegistry   = `registry`
+	configNodeNameGrpcServer = `grpcserver`
 )
 
 var (

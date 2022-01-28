@@ -9,6 +9,7 @@ package krpc
 import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/gogf/katyusha/balancer"
 )
@@ -16,13 +17,14 @@ import (
 // DefaultGrpcDialOptions returns the default options for creating grpc client connection.
 func (c krpcClient) DefaultGrpcDialOptions() []grpc.DialOption {
 	return []grpc.DialOption{
-		grpc.WithInsecure(),
 		balancer.WithRoundRobin(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 }
 
 // NewGrpcClientConn NewGrpcConn creates and returns a client connection for given service `appId`.
 func (c krpcClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	autoLoadAndRegisterEtcdRegistry()
 	var (
 		service           = gsvc.NewServiceWithName(name)
 		grpcClientOptions = make([]grpc.DialOption, 0)
@@ -33,7 +35,8 @@ func (c krpcClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*gr
 	}
 	grpcClientOptions = append(grpcClientOptions, c.ChainUnary(
 		c.UnaryTracing,
-		c.UnaryError))
+		c.UnaryError,
+	))
 	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
 		c.StreamTracing,
 	))

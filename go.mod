@@ -3,7 +3,9 @@ module github.com/gogf/katyusha
 go 1.15
 
 require (
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.0.0-20220128082344-48b5f3789470
 	github.com/gogf/gf/v2 v2.0.0-rc2.0.20220128082344-48b5f3789470
+	github.com/gogf/katyusha/example v0.0.0-20220128090236-a633147589ae // indirect
 	github.com/golang/protobuf v1.5.2
 	go.opentelemetry.io/otel v1.3.0
 	go.opentelemetry.io/otel/trace v1.3.0

@@ -17,17 +17,17 @@ import (
 
 // GrpcServerConfig is the configuration for server.
 type GrpcServerConfig struct {
-	Address          string              // (necessary) Address for server listening.
-	AppID            string              // (optional)  Unique name for current service.
-	Logger           *glog.Logger        // (optional)  Logger for server.
-	LogPath          string              // (optional)  LogPath specifies the directory for storing logging files.
-	LogStdout        bool                // (optional)  LogStdout specifies whether printing logging content to stdout.
-	ErrorStack       bool                // (optional)  ErrorStack specifies whether logging stack information when error.
-	ErrorLogEnabled  bool                // (optional)  ErrorLogEnabled enables error logging content to files.
-	ErrorLogPattern  string              // (optional)  ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
-	AccessLogEnabled bool                // (optional)  AccessLogEnabled enables access logging content to file.
-	AccessLogPattern string              // (optional)  AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
-	Options          []grpc.ServerOption // (optional)  GRPC Server options.
+	Address          string              // (optional) Address for server listening.
+	Name             string              // (optional) Name for current service.
+	Logger           *glog.Logger        // (optional) Logger for server.
+	LogPath          string              // (optional) LogPath specifies the directory for storing logging files.
+	LogStdout        bool                // (optional) LogStdout specifies whether printing logging content to stdout.
+	ErrorStack       bool                // (optional) ErrorStack specifies whether logging stack information when error.
+	ErrorLogEnabled  bool                // (optional) ErrorLogEnabled enables error logging content to files.
+	ErrorLogPattern  string              // (optional) ErrorLogPattern specifies the error log file pattern like: error-{Ymd}.log
+	AccessLogEnabled bool                // (optional) AccessLogEnabled enables access logging content to file.
+	AccessLogPattern string              // (optional) AccessLogPattern specifies the error log file pattern like: access-{Ymd}.log
+	Options          []grpc.ServerOption // (optional) GRPC Server options.
 }
 
 // NewGrpcServerConfig creates and returns a ServerConfig object with default configurations.
@@ -35,8 +35,10 @@ type GrpcServerConfig struct {
 // some pointer attributes that may be shared in different servers.
 func (s krpcServer) NewGrpcServerConfig() *GrpcServerConfig {
 	var (
+		err    error
 		ctx    = context.TODO()
 		config = &GrpcServerConfig{
+			Name:             defaultServerName,
 			Logger:           glog.New(),
 			LogStdout:        true,
 			ErrorLogEnabled:  true,
@@ -45,11 +47,9 @@ func (s krpcServer) NewGrpcServerConfig() *GrpcServerConfig {
 			AccessLogPattern: "access-{Ymd}.log",
 		}
 	)
-
 	// Reading configuration file and updating the configured keys.
 	if g.Cfg().Available(ctx) {
-		err := g.Cfg().MustGet(ctx, configNodeNameGrpcServer).Struct(&config)
-		if err != nil {
+		if err = g.Cfg().MustGet(ctx, configNodeNameGrpcServer).Struct(&config); err != nil {
 			g.Log().Error(ctx, err)
 		}
 	}
