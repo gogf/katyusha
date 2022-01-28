@@ -7,31 +7,26 @@
 package krpc
 
 import (
-	"fmt"
-
+	"github.com/gogf/gf/v2/net/gsvc"
 	"google.golang.org/grpc"
 
 	"github.com/gogf/katyusha/balancer"
-	"github.com/gogf/katyusha/discovery"
 )
 
 // DefaultGrpcDialOptions returns the default options for creating grpc client connection.
 func (c krpcClient) DefaultGrpcDialOptions() []grpc.DialOption {
 	return []grpc.DialOption{
 		grpc.WithInsecure(),
-		grpc.WithDefaultServiceConfig(fmt.Sprintf(
-			`{"loadBalancingPolicy": "%s"}`,
-			balancer.RoundRobin,
-		)),
+		balancer.WithRoundRobin(),
 	}
 }
 
 // NewGrpcClientConn NewGrpcConn creates and returns a client connection for given service `appId`.
-func (c krpcClient) NewGrpcClientConn(appID string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
-	if err := discovery.InitDiscoveryFromConfig(); err != nil {
-		return nil, err
-	}
-	grpcClientOptions := make([]grpc.DialOption, 0)
+func (c krpcClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*grpc.ClientConn, error) {
+	var (
+		service           = gsvc.NewServiceWithName(name)
+		grpcClientOptions = make([]grpc.DialOption, 0)
+	)
 	grpcClientOptions = append(grpcClientOptions, c.DefaultGrpcDialOptions()...)
 	if len(opts) > 0 {
 		grpcClientOptions = append(grpcClientOptions, opts...)
@@ -42,7 +37,7 @@ func (c krpcClient) NewGrpcClientConn(appID string, opts ...grpc.DialOption) (*g
 	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
 		c.StreamTracing,
 	))
-	conn, err := grpc.Dial(discovery.DefaultScheme+":///"+appID, grpcClientOptions...)
+	conn, err := grpc.Dial(service.KeyWithSchema(), grpcClientOptions...)
 	if err != nil {
 		return nil, err
 	}

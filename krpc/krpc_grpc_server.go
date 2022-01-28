@@ -18,21 +18,19 @@ import (
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
+	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
-	"github.com/gogf/gf/v2/os/gcmd"
 	"github.com/gogf/gf/v2/os/glog"
 	"github.com/gogf/gf/v2/os/gproc"
 	"github.com/gogf/gf/v2/text/gstr"
 	"google.golang.org/grpc"
-
-	"github.com/gogf/katyusha/discovery"
 )
 
 // GrpcServer is the server for GRPC protocol.
 type GrpcServer struct {
 	Server    *grpc.Server
 	config    *GrpcServerConfig
-	services  []*discovery.Service
+	services  []*gsvc.Service
 	waitGroup sync.WaitGroup
 }
 
@@ -80,7 +78,7 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 
 // Service binds service list to current server.
 // Server will automatically register the service list after it starts.
-func (s *GrpcServer) Service(services ...*discovery.Service) {
+func (s *GrpcServer) Service(services ...*gsvc.Service) {
 	var (
 		serviceAddress string
 		ctx            = context.TODO()
@@ -100,8 +98,8 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 		serviceAddress = s.config.Address
 	}
 	for _, service := range services {
-		if service.Address == "" {
-			service.Address = serviceAddress
+		if len(service.Endpoints) == 0 {
+			service.Endpoints = []string{serviceAddress}
 		}
 	}
 	s.services = append(s.services, services...)
@@ -110,31 +108,12 @@ func (s *GrpcServer) Service(services ...*discovery.Service) {
 // Run starts the server in blocking way.
 func (s *GrpcServer) Run() {
 	var ctx = context.TODO()
-	// Initialize discovery.
-	if err := discovery.InitDiscoveryFromConfig(); err != nil {
-		s.config.Logger.Fatal(ctx, err)
-	}
 	// Initialize services configured.
 	listener, err := net.Listen("tcp", s.config.Address)
 	if err != nil {
 		s.config.Logger.Fatal(ctx, err)
 	}
-	if len(s.services) == 0 {
-		appID := gcmd.GetOptWithEnv(discovery.EnvAppID).String()
-		if appID != "" {
-			// Automatically creating service if app id can be retrieved
-			// from environment or command-line.
-			s.Service(&discovery.Service{
-				AppID: appID,
-			})
-		}
-		// Check any application identities bound with server.
-		if len(s.config.AppID) > 0 {
-			s.Service(&discovery.Service{
-				AppID: s.config.AppID,
-			})
-		}
-	}
+
 	// Start listening.
 	go func() {
 		if err = s.Server.Serve(listener); err != nil {
@@ -144,7 +123,7 @@ func (s *GrpcServer) Run() {
 
 	// Register service list after server starts.
 	for _, service := range s.services {
-		if err = discovery.Register(service); err != nil {
+		if err = gsvc.Register(ctx, service); err != nil {
 			s.config.Logger.Fatal(ctx, err)
 		}
 	}
@@ -172,7 +151,7 @@ func (s *GrpcServer) Run() {
 			syscall.SIGABRT:
 			s.config.Logger.Printf(ctx, "signal received: %s, gracefully shutting down", sig.String())
 			for _, service := range s.services {
-				_ = discovery.Unregister(service)
+				_ = gsvc.Deregister(ctx, service)
 			}
 			time.Sleep(time.Second)
 			s.Stop()
