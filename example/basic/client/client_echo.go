@@ -9,7 +9,7 @@ package main
 import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gctx"
-	"github.com/gogf/katyusha/.examples/basic/protobuf"
+	"github.com/gogf/katyusha/example/basic/protobuf"
 )
 
 // go run client_echo.go

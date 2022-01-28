@@ -13,7 +13,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"golang.org/x/net/context"
 
-	"github.com/gogf/katyusha/.examples/basic/protobuf"
+	"github.com/gogf/katyusha/example/basic/protobuf"
 )
 
 type Time struct{}
