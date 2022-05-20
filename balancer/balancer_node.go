@@ -12,14 +12,18 @@ import (
 )
 
 type Node struct {
-	service *gsvc.Service
+	service gsvc.Service
 	conn    balancer.SubConn
 }
 
-func (n *Node) Service() *gsvc.Service {
+func (n *Node) Service() gsvc.Service {
 	return n.service
 }
 
 func (n *Node) Address() string {
-	return n.service.Address()
+	endpoints := n.service.GetEndpoints()
+	if len(endpoints) == 0 {
+		return ""
+	}
+	return endpoints[0].String()
 }

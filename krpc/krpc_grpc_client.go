@@ -7,6 +7,8 @@
 package krpc
 
 import (
+	"fmt"
+
 	"github.com/gogf/gf/v2/net/gsvc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -40,7 +42,7 @@ func (c krpcClient) NewGrpcClientConn(name string, opts ...grpc.DialOption) (*gr
 	grpcClientOptions = append(grpcClientOptions, c.ChainStream(
 		c.StreamTracing,
 	))
-	conn, err := grpc.Dial(service.KeyWithSchema(), grpcClientOptions...)
+	conn, err := grpc.Dial(fmt.Sprintf(`%s://%s`, gsvc.Schema, service.GetKey()), grpcClientOptions...)
 	if err != nil {
 		return nil, err
 	}

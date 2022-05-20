@@ -30,8 +30,13 @@ import (
 type GrpcServer struct {
 	Server    *grpc.Server
 	config    *GrpcServerConfig
-	services  []*gsvc.Service
+	services  []gsvc.Service
 	waitGroup sync.WaitGroup
+}
+
+type Service struct {
+	gsvc.Service
+	Endpoints gsvc.Endpoints
 }
 
 // NewGrpcServer creates and returns a grpc server.
@@ -78,7 +83,7 @@ func (s krpcServer) NewGrpcServer(conf ...*GrpcServerConfig) *GrpcServer {
 
 // Service binds service list to current server.
 // Server will automatically register the service list after it starts.
-func (s *GrpcServer) Service(services ...*gsvc.Service) {
+func (s *GrpcServer) Service(services ...gsvc.Service) {
 	var (
 		serviceAddress string
 		ctx            = context.TODO()
@@ -97,9 +102,14 @@ func (s *GrpcServer) Service(services ...*gsvc.Service) {
 	} else {
 		serviceAddress = s.config.Address
 	}
-	for _, service := range services {
-		if len(service.Endpoints) == 0 {
-			service.Endpoints = []string{serviceAddress}
+	for i, service := range services {
+		if len(service.GetEndpoints()) == 0 {
+			newService := &Service{
+				Service:   service,
+				Endpoints: make(gsvc.Endpoints, 0),
+			}
+			newService.Endpoints = gsvc.NewEndpoints(serviceAddress)
+			services[i] = newService
 		}
 	}
 	s.services = append(s.services, services...)
@@ -124,7 +134,7 @@ func (s *GrpcServer) Run() {
 	}()
 
 	if len(s.services) == 0 {
-		s.services = []*gsvc.Service{s.newDefaultService()}
+		s.services = []gsvc.Service{s.newDefaultService()}
 	}
 
 	// Register service list after server starts.
@@ -143,7 +153,7 @@ func (s *GrpcServer) Run() {
 	s.doSignalListen()
 }
 
-func (s *GrpcServer) newDefaultService() *gsvc.Service {
+func (s *GrpcServer) newDefaultService() gsvc.Service {
 	var (
 		protocol = `grpc`
 		address  = s.config.Address
@@ -159,9 +169,9 @@ func (s *GrpcServer) newDefaultService() *gsvc.Service {
 	metadata := gsvc.Metadata{
 		gsvc.MDProtocol: protocol,
 	}
-	return &gsvc.Service{
+	return &gsvc.LocalService{
 		Name:      s.config.Name,
-		Endpoints: []string{fmt.Sprintf(`%s:%s`, ip, port)},
+		Endpoints: gsvc.NewEndpoints(fmt.Sprintf(`%s:%s`, ip, port)),
 		Metadata:  metadata,
 	}
 }

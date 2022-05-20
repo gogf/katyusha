@@ -48,17 +48,17 @@ func (r *Resolver) watch() {
 	}
 }
 
-func (r *Resolver) update(services []*gsvc.Service) {
+func (r *Resolver) update(services []gsvc.Service) {
 	var (
 		err       error
 		addresses = make([]resolver.Address, 0)
 	)
 	for _, service := range services {
-		for _, endpoint := range service.Endpoints {
+		for _, endpoint := range service.GetEndpoints() {
 			addr := resolver.Address{
-				Addr:       endpoint,
-				ServerName: service.Name,
-				Attributes: newAttributesFromMetadata(service.Metadata),
+				Addr:       endpoint.String(),
+				ServerName: service.GetName(),
+				Attributes: newAttributesFromMetadata(service.GetMetadata()),
 			}
 			addr.Attributes = addr.Attributes.WithValue(rawSvcKeyInSubConnInfo, service)
 			addresses = append(addresses, addr)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
@@ -23,7 +24,7 @@ func main() {
 	)
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(
-		service.KeyWithSchema(),
+		fmt.Sprintf(`%s://%s`, gsvc.Schema, service.GetKey()),
 		balancer.WithRandom(),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)

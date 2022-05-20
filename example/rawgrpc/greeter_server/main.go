@@ -32,9 +32,9 @@ func main() {
 		err     error
 		ctx     = gctx.New()
 		address = fmt.Sprintf("%s:%d", gipv4.MustGetIntranetIp(), gtcp.MustGetFreePort())
-		service = &gsvc.Service{
+		service = &gsvc.LocalService{
 			Name:      "hello",
-			Endpoints: []string{address},
+			Endpoints: gsvc.NewEndpoints(address),
 		}
 	)
 	err = gsvc.Register(ctx, service)

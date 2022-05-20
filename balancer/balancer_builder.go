@@ -31,7 +31,7 @@ func (b *Builder) Build(info base.PickerBuildInfo) balancer.Picker {
 		nodes = make([]gsel.Node, 0)
 	)
 	for conn, subConnInfo := range info.ReadySCs {
-		svc, _ := subConnInfo.Address.Attributes.Value(rawSvcKeyInSubConnInfo).(*gsvc.Service)
+		svc, _ := subConnInfo.Address.Attributes.Value(rawSvcKeyInSubConnInfo).(gsvc.Service)
 		if svc == nil {
 			g.Log().Noticef(ctx, `empty service read from: %+v`, subConnInfo.Address)
 			continue
