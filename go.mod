@@ -5,7 +5,6 @@ go 1.15
 require (
 	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.0-rc3.0.20220520082600-c90acf81d6a8
 	github.com/gogf/gf/v2 v2.1.0-rc3.0.20220520082600-c90acf81d6a8
-	github.com/gogf/katyusha/example v0.0.0-20220128101623-e25b27a99b29 // indirect
 	github.com/golang/protobuf v1.5.2
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect

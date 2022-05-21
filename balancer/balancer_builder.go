@@ -44,7 +44,7 @@ func (b *Builder) Build(info base.PickerBuildInfo) balancer.Picker {
 	p := &Picker{
 		selector: b.builder.Build(),
 	}
-	if err := p.selector.Update(nodes); err != nil {
+	if err := p.selector.Update(ctx, nodes); err != nil {
 		panic(err)
 	}
 	return p
