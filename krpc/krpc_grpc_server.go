@@ -138,11 +138,12 @@ func (s *GrpcServer) Run() {
 	}
 
 	// Register service list after server starts.
-	for _, service := range s.services {
+	for i, service := range s.services {
 		s.config.Logger.Debugf(ctx, `service register: %+v`, service)
-		if err = gsvc.Register(ctx, service); err != nil {
+		if service, err = gsvc.Register(ctx, service); err != nil {
 			s.config.Logger.Fatalf(ctx, `%+v`, err)
 		}
+		s.services[i] = service
 	}
 
 	s.config.Logger.Printf(
