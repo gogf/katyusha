@@ -54,9 +54,9 @@ func (s krpcServer) UnaryError(
 func (s krpcServer) UnaryRecover(
 	ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler,
 ) (res interface{}, err error) {
-	gutil.TryCatch(func() {
+	gutil.TryCatch(ctx, func(ctx2 context.Context) {
 		res, err = handler(ctx, req)
-	}, func(exception error) {
+	}, func(ctx context.Context, exception error) {
 		err = gerror.WrapCode(gcode.New(int(codes.Internal), "", nil), err, "panic recovered")
 	})
 	return
