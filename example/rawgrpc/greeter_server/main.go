@@ -11,9 +11,10 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
+	"google.golang.org/grpc"
+
 	pb "github.com/gogf/katyusha/example/rawgrpc/helloworld"
 	"github.com/gogf/katyusha/resolver"
-	"google.golang.org/grpc"
 )
 
 type server struct {
@@ -37,7 +38,8 @@ func main() {
 			Endpoints: gsvc.NewEndpoints(address),
 		}
 	)
-	err = gsvc.Register(ctx, service)
+
+	_, err = gsvc.Register(ctx, service)
 	if err != nil {
 		panic(err)
 	}
