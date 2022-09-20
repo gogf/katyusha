@@ -16,8 +16,10 @@ import (
 	"github.com/gogf/katyusha/example/basic/protobuf"
 )
 
+// Echo is the service for echo.
 type Echo struct{}
 
+// Say implements the protobuf.EchoServer interface.
 func (s *Echo) Say(ctx context.Context, r *protobuf.SayReq) (*protobuf.SayRes, error) {
 	g.Log().Print(ctx, "Received:", r.Content)
 	text := fmt.Sprintf(`%s: > %s`, gcmd.GetOpt("node", "default"), r.Content)

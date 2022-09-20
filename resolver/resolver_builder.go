@@ -15,8 +15,10 @@ import (
 	"google.golang.org/grpc/resolver"
 )
 
+// Builder is the builder for the etcd discovery resolver.
 type Builder struct{}
 
+// Build creates a new etcd discovery resolver.
 func (b *Builder) Build(
 	target resolver.Target, cc resolver.ClientConn, opts resolver.BuildOptions,
 ) (resolver.Resolver, error) {

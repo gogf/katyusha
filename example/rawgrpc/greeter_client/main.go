@@ -8,11 +8,12 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/os/gctx"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/gogf/katyusha/balancer"
 	pb "github.com/gogf/katyusha/example/rawgrpc/helloworld"
 	"github.com/gogf/katyusha/resolver"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {

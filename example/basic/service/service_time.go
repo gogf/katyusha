@@ -16,8 +16,10 @@ import (
 	"github.com/gogf/katyusha/example/basic/protobuf"
 )
 
+// Time is the service for time.
 type Time struct{}
 
+// Now implements the protobuf.TimeServer interface.
 func (s *Time) Now(ctx context.Context, r *protobuf.NowReq) (*protobuf.NowRes, error) {
 	text := fmt.Sprintf(`%s: %s`, gcmd.GetOpt("node", "default"), gtime.Now().String())
 	return &protobuf.NowRes{Time: text}, nil
