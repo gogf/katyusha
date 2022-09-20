@@ -27,6 +27,7 @@ func init() {
 	Register(gsel.SelectorLeastConnection, gsel.NewBuilderLeastConnection())
 }
 
+// Register registers the given balancer builder with the given name.
 func Register(name string, builder gsel.Builder) {
 	balancer.Register(base.NewBalancerBuilder(
 		name,
@@ -35,18 +36,22 @@ func Register(name string, builder gsel.Builder) {
 	))
 }
 
+// WithRandom returns a grpc.DialOption which enables random load balancing.
 func WithRandom() grpc.DialOption {
 	return doWithSelectorName(gsel.SelectorRandom)
 }
 
+// WithWeight returns a grpc.DialOption which enables weight load balancing.
 func WithWeight() grpc.DialOption {
 	return doWithSelectorName(gsel.SelectorWeight)
 }
 
+// WithRoundRobin returns a grpc.DialOption which enables round-robin load balancing.
 func WithRoundRobin() grpc.DialOption {
 	return doWithSelectorName(gsel.SelectorRoundRobin)
 }
 
+// WithLeastConnection returns a grpc.DialOption which enables the least connection load balancing.
 func WithLeastConnection() grpc.DialOption {
 	return doWithSelectorName(gsel.SelectorLeastConnection)
 }

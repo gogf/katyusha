@@ -12,11 +12,11 @@ package grpctracing
 // https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/rpc.md
 import (
 	"context"
+	"errors"
 	"io"
 	"net"
 	"strings"
 
-	"github.com/golang/protobuf/proto" //nolint:staticcheck
 	"go.opentelemetry.io/otel/attribute"
 	semconv "go.opentelemetry.io/otel/semconv/v1.7.0"
 	"go.opentelemetry.io/otel/trace"
@@ -24,6 +24,7 @@ import (
 	grpcCodes "google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"google.golang.org/protobuf/proto"
 )
 
 type messageType attribute.KeyValue
@@ -85,7 +86,7 @@ func (w *clientStream) RecvMsg(m interface{}) error {
 
 	if err == nil && !w.desc.ServerStreams {
 		w.sendStreamEvent(receiveEndEvent, nil)
-	} else if err == io.EOF {
+	} else if errors.Is(err, io.EOF) {
 		w.sendStreamEvent(receiveEndEvent, nil)
 	} else if err != nil {
 		w.sendStreamEvent(errorEvent, err)

@@ -3,13 +3,13 @@ module github.com/gogf/katyusha/example
 go 1.15
 
 require (
-	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.0-rc3.0.20220523034830-510fa3faf03f
-	github.com/gogf/gf/v2 v2.1.0-rc3.0.20220523034830-510fa3faf03f
-	github.com/gogf/katyusha v0.3.0
+	github.com/gogf/gf/contrib/registry/etcd/v2 v2.1.4
+	github.com/gogf/gf/v2 v2.1.4
+	github.com/gogf/katyusha v0.4.0
 	github.com/golang/protobuf v1.5.2
-	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
-	google.golang.org/grpc v1.46.2
-	google.golang.org/protobuf v1.28.0
+	golang.org/x/net v0.0.0-20220919232410-f2f64ebce3c1
+	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
 )
 
 replace github.com/gogf/katyusha => ../

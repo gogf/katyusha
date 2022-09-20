@@ -11,15 +11,17 @@ import (
 	"github.com/gogf/gf/v2/net/gsvc"
 	"github.com/gogf/gf/v2/net/gtcp"
 	"github.com/gogf/gf/v2/os/gctx"
+	"google.golang.org/grpc"
+
 	pb "github.com/gogf/katyusha/example/rawgrpc/helloworld"
 	"github.com/gogf/katyusha/resolver"
-	"google.golang.org/grpc"
 )
 
 type server struct {
 	pb.UnimplementedGreeterServer
 }
 
+// SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	g.Log().Printf(ctx, "Received: %v", in.GetName())
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
@@ -37,7 +39,8 @@ func main() {
 			Endpoints: gsvc.NewEndpoints(address),
 		}
 	)
-	err = gsvc.Register(ctx, service)
+
+	_, err = gsvc.Register(ctx, service)
 	if err != nil {
 		panic(err)
 	}

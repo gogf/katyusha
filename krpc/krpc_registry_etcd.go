@@ -12,6 +12,7 @@ import (
 	"github.com/gogf/gf/contrib/registry/etcd/v2"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gsvc"
+
 	"github.com/gogf/katyusha/resolver"
 )
 

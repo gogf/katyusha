@@ -11,15 +11,18 @@ import (
 	"google.golang.org/grpc/balancer"
 )
 
+// Node is the node for the balancer.
 type Node struct {
 	service gsvc.Service
 	conn    balancer.SubConn
 }
 
+// Service returns the service of the node.
 func (n *Node) Service() gsvc.Service {
 	return n.service
 }
 
+// Address returns the address of the node.
 func (n *Node) Address() string {
 	endpoints := n.service.GetEndpoints()
 	if len(endpoints) == 0 {

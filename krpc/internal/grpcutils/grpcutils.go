@@ -9,20 +9,19 @@ package grpcutils
 import (
 	"fmt"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 var (
-	jsonPbMarshaller = &jsonpb.Marshaler{
-		EmitDefaults: true,
+	protoJSONMarshaller = &protojson.MarshalOptions{
+		EmitUnpopulated: true,
 	}
 )
 
 // MarshalPbMessageToJsonString marshals protobuf message to json string.
 func MarshalPbMessageToJsonString(msg proto.Message) string {
-	msgJsonStr, _ := jsonPbMarshaller.MarshalToString(msg)
-	return msgJsonStr
+	return protoJSONMarshaller.Format(msg)
 }
 
 func MarshalMessageToJsonStringForTracing(value interface{}, msgType string, maxBytes int) string {
